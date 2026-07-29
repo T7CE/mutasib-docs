@@ -61,20 +61,23 @@ Apply a manual stock adjustment to a single product. The `adjustment` field is a
 <ParamField path="adjustment" type="integer">
   The quantity to add (positive) or remove (negative) from current stock. Defaults to `0`.
 </ParamField>
+
 <ParamField path="low_stock_threshold" type="integer">
   Update the threshold at which this product is flagged as low stock. Optional.
 </ParamField>
+
 <ParamField path="reason" type="string">
   Why the adjustment is being made. Defaults to `adjustment`. Accepted values:
 
   | Value | When to use |
-  |---|---|
+  | --- | --- |
   | `adjustment` | Generic manual correction |
   | `purchase` | Stock received from a supplier |
   | `return` | Customer or supplier return |
   | `damage` | Items damaged or expired |
   | `correction` | Fixing a data entry mistake |
 </ParamField>
+
 <ParamField path="note" type="string">
   An optional free-text note attached to this movement record. Defaults to `""`.
 </ParamField>
@@ -131,6 +134,7 @@ Every stock change — whether from a sale, a manual adjustment, or an import �
 <ParamField query="product_id" type="integer">
   Filter movements to a single product.
 </ParamField>
+
 <ParamField query="reason" type="string">
   Filter by reason. Accepted values: `sale`, `adjustment`, `purchase`, `return`, `damage`, `correction`.
 </ParamField>
@@ -145,27 +149,35 @@ curl "https://api.mutasib.com/api/v1/shops/42/inventory/movements/?product_id=10
 <ResponseField name="id" type="integer">
   Unique movement record ID.
 </ResponseField>
+
 <ResponseField name="product_id" type="integer">
   ID of the affected product.
 </ResponseField>
+
 <ResponseField name="product_name" type="string">
   Name of the affected product at the time of the movement.
 </ResponseField>
+
 <ResponseField name="quantity_change" type="integer">
   The delta applied. Positive means stock increased; negative means stock decreased.
 </ResponseField>
+
 <ResponseField name="stock_after" type="integer">
   The stock level immediately after this movement was applied.
 </ResponseField>
+
 <ResponseField name="reason" type="string">
   The reason code for the movement (e.g. `sale`, `purchase`, `damage`).
 </ResponseField>
+
 <ResponseField name="user_name" type="string">
   Name of the user who triggered the movement.
 </ResponseField>
+
 <ResponseField name="note" type="string">
   Free-text note attached to the movement, if any.
 </ResponseField>
+
 <ResponseField name="created_at" type="string">
   ISO 8601 timestamp of when the movement was recorded.
 </ResponseField>
@@ -177,27 +189,35 @@ curl "https://api.mutasib.com/api/v1/shops/42/inventory/movements/?product_id=10
 <ResponseField name="id" type="integer">
   Product ID.
 </ResponseField>
+
 <ResponseField name="name" type="string">
   Product display name.
 </ResponseField>
+
 <ResponseField name="barcode" type="string">
   Product barcode (EAN, UPC, or custom), if assigned.
 </ResponseField>
+
 <ResponseField name="stock" type="integer">
   Current on-hand quantity.
 </ResponseField>
+
 <ResponseField name="low_stock_threshold" type="integer">
   The quantity at or below which `is_low_stock` becomes `true`.
 </ResponseField>
+
 <ResponseField name="is_low_stock" type="boolean">
   `true` when `stock <= low_stock_threshold`.
 </ResponseField>
+
 <ResponseField name="unit" type="string">
   Unit of measure (e.g. `piece`, `kg`, `litre`).
 </ResponseField>
+
 <ResponseField name="price" type="string">
   Current selling price as a decimal string.
 </ResponseField>
+
 <ResponseField name="category_name" type="string">
   Name of the product's category, if assigned. May be `null`.
 </ResponseField>
@@ -205,5 +225,5 @@ curl "https://api.mutasib.com/api/v1/shops/42/inventory/movements/?product_id=10
 ---
 
 <Tip>
-  Set a meaningful `low_stock_threshold` for each product based on your reorder lead time and average daily sales. A product that sells 10 units per day and takes 3 days to restock should have a threshold of at least 30 — otherwise you risk running out before the next delivery arrives. You can pair this with the [AI reorder endpoint](/api/ai/overview) to get suggested order quantities automatically.
+  Set a meaningful `low_stock_threshold` for each product based on your reorder lead time and average daily sales. A product that sells 10 units per day and takes 3 days to restock should have a threshold of at least 30 — otherwise you risk running out before the next delivery arrives.
 </Tip>

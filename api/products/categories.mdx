@@ -1,10 +1,10 @@
 ---
 title: "Product Categories API: Organize Your Shop Catalog"
 sidebarTitle: "Categories"
-description: "Create, update, and delete custom product categories per shop. Browse system preset categories returned as a nested tree for easy integration."
+description: "Create, list, update, and delete custom product categories per shop using the Mutasib API."
 ---
 
-Categories help you organize your products so staff can find them quickly at the point of sale and customers can browse them on your storefront. Each shop maintains its own category tree, and you can create unlimited subcategories by linking a category to a `parent_id`. Alternatively, you can browse the system-provided preset categories — a curated set of common retail categories maintained by Mutasib — and use their names to seed your own catalog.
+Categories help you organize your products so staff can find them quickly at the point of sale and customers can browse them on your storefront. Each shop maintains its own category tree, and you can create unlimited subcategories by linking a category to a `parent_id`.
 
 ---
 
@@ -22,7 +22,7 @@ Creates a new category in the specified shop. To create a top-level category, om
   The display name of the category in the primary language.
 </ParamField>
 
-<ParamField body="name_ar" type="string" default='""'>
+<ParamField body="name_ar" default='""' type="string">
   The Arabic name of the category. Used in bilingual storefronts. Leave blank if you do not need Arabic labels.
 </ParamField>
 
@@ -143,68 +143,6 @@ Returns `204 No Content` on success.
 <Warning>
   Deleting a parent category also removes all of its subcategories. Products assigned to the deleted categories are not deleted but will become uncategorized.
 </Warning>
-
----
-
-## Get preset categories
-
-<br />
-
-`GET /api/v1/shops/preset-categories/`
-
-Returns the system-wide library of preset categories maintained by Mutasib. These are common retail categories you can use as inspiration for your own shop structure. This endpoint is **public** — no authentication is required.
-
-```bash
-curl https://api.mutasib.com/api/v1/shops/preset-categories/
-```
-
-Returns `200 OK` with a nested tree of preset category objects. The structure mirrors the shop categories tree but uses system-assigned IDs.
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Grocery",
-    "name_ar": "بقالة",
-    "parent_id": null,
-    "children": [
-      {
-        "id": 2,
-        "name": "Bakery",
-        "name_ar": "مخبوزات",
-        "parent_id": 1,
-        "children": []
-      },
-      {
-        "id": 3,
-        "name": "Beverages",
-        "name_ar": "مشروبات",
-        "parent_id": 1,
-        "children": []
-      }
-    ]
-  },
-  {
-    "id": 10,
-    "name": "Electronics",
-    "name_ar": "إلكترونيات",
-    "parent_id": null,
-    "children": [
-      {
-        "id": 11,
-        "name": "Mobile Phones",
-        "name_ar": "هواتف",
-        "parent_id": 10,
-        "children": []
-      }
-    ]
-  }
-]
-```
-
-<Tip>
-  You do not need to copy preset category IDs into your shop. Preset categories are a reference only. Create your own shop categories using the [Create a category](#create-a-category) endpoint and use `name` values from the preset list if you want consistency.
-</Tip>
 
 ---
 

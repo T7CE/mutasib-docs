@@ -1,93 +1,14 @@
 ---
 title: "Make Your Mutasib Shop Discoverable with Public Search"
 sidebarTitle: "Public Search"
-description: "Enable your shop and products to appear in Mutasib's public marketplace, control product visibility, and let customers find you by location."
+description: "Use the Mutasib public API to search products across shops, list nearby shops, and browse a shop's public catalog with no authentication."
 ---
 
-Mutasib includes a built-in public marketplace that lets customers discover your shop and browse your products without needing a Mutasib account. This page explains how to make your shop and products visible in search, how the public API endpoints work, and how to enable location-based discovery so nearby customers can find you.
-
-## Requirements for appearing in search
-
-Your shop and products must meet a few conditions before they appear in public search results.
-
-**Shop-level requirements:**
-- Your shop must be approved by Mutasib (`is_approved: true`).
-- Your shop must be active (`is_active: true`).
-- Your plan must be Starter or Pro — Free plan shops are not listed in the public marketplace.
-
-**Product-level requirements:**
-- Each product must be individually marked as public (`is_public: true`). Products are private by default.
-- Your plan determines how many products you can make public simultaneously (see the public summary endpoint below).
+Mutasib includes a built-in public marketplace that lets customers discover shops and browse products without needing a Mutasib account. This page explains the public API endpoints and how to enable location-based discovery so nearby customers can find your shop.
 
 <Note>
-  Pro plan shops receive higher placement in search results and may be featured in curated sections of the marketplace.
+  Public search visibility is controlled from the [Mutasib dashboard](https://mutasib.com/dashboard). This guide focuses on the endpoints that read from the public marketplace.
 </Note>
-
-## Making products public
-
-Products are private by default. You control visibility product by product, or in bulk.
-
-### Toggle a single product
-
-Send a `POST` request to the toggle-public endpoint for a specific product. Each call flips the `is_public` flag — if the product is currently private it becomes public, and vice versa.
-
-```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/products/17/toggle-public \
-  -H "Authorization: Bearer <your_token>"
-```
-
-### Update visibility in bulk
-
-To set the visibility of multiple products at once, use the batch-visibility endpoint:
-
-<CodeGroup>
-```bash cURL
-curl -X POST https://api.mutasib.com/api/v1/shops/42/products/batch-visibility \
-  -H "Authorization: Bearer <your_token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "product_ids": [17, 23, 31],
-    "is_public": true
-  }'
-```
-
-```python Python
-import requests
-
-requests.post(
-    "https://api.mutasib.com/api/v1/shops/42/products/batch-visibility",
-    headers={"Authorization": "Bearer <your_token>"},
-    json={"product_ids": [17, 23, 31], "is_public": True},
-)
-```
-
-```js JavaScript
-await fetch("https://api.mutasib.com/api/v1/shops/42/products/batch-visibility", {
-  method: "POST",
-  headers: {
-    Authorization: "Bearer <your_token>",
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ product_ids: [17, 23, 31], is_public: true }),
-});
-```
-</CodeGroup>
-
-### Checking your public product quota
-
-Your plan caps how many products can be public at once. Use the public-summary endpoint to check your current usage against the limit before making bulk changes.
-
-```bash
-curl https://api.mutasib.com/api/v1/shops/42/products/public-summary \
-  -H "Authorization: Bearer <your_token>"
-```
-
-```json
-{
-  "public_count": 34,
-  "plan_limit": 50
-}
-```
 
 ## Public search endpoints
 
@@ -119,8 +40,6 @@ curl https://api.mutasib.com/api/v1/public/shops/
 curl "https://api.mutasib.com/api/v1/public/shops/?category=grocery"
 ```
 
-Returns all approved, active shops that have opted in to public visibility.
-
 ### Get a single shop's details
 
 ```bash
@@ -139,7 +58,7 @@ curl https://api.mutasib.com/api/v1/public/shops/42/products/
 curl "https://api.mutasib.com/api/v1/public/shops/42/products/?search=olive+oil&category_id=5"
 ```
 
-Returns only the products where `is_public: true`. Private products are never included in this response, regardless of the caller.
+Returns only the products where `is_public: true`.
 
 ## Nearby shop discovery
 
@@ -151,7 +70,7 @@ curl "https://api.mutasib.com/api/v1/public/shops/nearby/?lat=36.7&lng=3.05&radi
 ```
 
 | Parameter | Type | Default | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `lat` | float | — | Latitude of the search origin |
 | `lng` | float | — | Longitude of the search origin |
 | `radius` | float | `10` | Search radius in kilometres |
@@ -166,7 +85,7 @@ Update your shop's coordinates with a `PATCH` request. You only need to do this 
 
 ```bash
 curl -X PATCH https://api.mutasib.com/api/v1/shops/42 \
-  -H "Authorization: Bearer <your_token>" \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "latitude": 36.7372,
@@ -174,7 +93,7 @@ curl -X PATCH https://api.mutasib.com/api/v1/shops/42 \
   }'
 ```
 
-Once coordinates are saved, your shop will appear in nearby searches automatically — no further action needed.
+Once coordinates are saved, your shop will appear in nearby searches automatically.
 
 <Accordion title="Tips for better search visibility">
   - **Write descriptive product names.** The search index matches against product names and descriptions, so clear names like "Full-Fat Labneh 500g" rank better than "LBN-500".

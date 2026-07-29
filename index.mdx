@@ -1,23 +1,26 @@
 ---
 title: "Mutasib API Documentation"
 sidebarTitle: "Home"
-description: "Mutasib is an all-in-one shop management platform. Use the API to manage shops, products, sales, inventory, and AI-powered analytics."
+description: "Mutasib is an all-in-one shop management platform. Use the API to manage products, sales, inventory, suppliers, and the public marketplace."
 ---
 
-Mutasib gives shop owners and developers a complete REST API for building on top of the Mutasib platform — from registering shops and managing products to processing sales, tracking inventory, and querying AI-powered demand forecasts. Every resource in the Mutasib dashboard is accessible through this API.
+Mutasib gives shop owners and developers a REST API for building on top of the Mutasib platform — from managing products to processing sales, tracking inventory, and powering the public marketplace.
 
 <CardGroup cols={2}>
   <Card title="Quick Start" icon="rocket" href="/quickstart">
     Make your first API call in under 5 minutes
   </Card>
+
   <Card title="Authentication" icon="key" href="/authentication">
-    Get a JWT token and authenticate every request
+    Generate an API token and authenticate every request
   </Card>
-  <Card title="API Reference" icon="code" href="/api/auth/register">
-    Full endpoint reference with request & response examples
+
+  <Card title="API Reference" icon="code" href="/api/shops/overview">
+    Full endpoint reference with request and response examples
   </Card>
+
   <Card title="Core Concepts" icon="book-open" href="/concepts/shops">
-    Understand shops, products, plans, and the data model
+    Understand shops, products, and the data model
   </Card>
 </CardGroup>
 
@@ -27,37 +30,42 @@ Mutasib gives shop owners and developers a complete REST API for building on top
   <Card title="Point of Sale" icon="barcode" href="/api/sales/overview">
     Create sales, scan barcodes, and issue digital receipts
   </Card>
+
   <Card title="Inventory" icon="boxes-stacked" href="/api/inventory/overview">
     Track stock levels, adjust inventory, and catch low-stock alerts
   </Card>
-  <Card title="Analytics" icon="chart-line" href="/api/analytics/overview">
-    Pull revenue trends, top products, and category breakdowns
+
+  <Card title="Suppliers" icon="truck" href="/api/analytics/overview">
+    Store and manage supplier records scoped to each shop
   </Card>
-  <Card title="AI Features" icon="brain" href="/api/ai/overview">
-    Demand forecasting, reorder suggestions, and M.AI chat
-  </Card>
+
   <Card title="Public Search" icon="magnifying-glass" href="/api/public/overview">
     Let customers discover your shop and products
   </Card>
-  <Card title="Offline Sync" icon="rotate" href="/api/sync/overview">
-    Sync batches of offline operations when connectivity returns
+
+  <Card title="Products" icon="tag" href="/api/products/overview">
+    Manage your catalog, images, categories, and barcodes
+  </Card>
+
+  <Card title="Credit Notes" icon="file-invoice" href="/api/sales/credit-notes">
+    Track customer debts, due dates, and settlements
   </Card>
 </CardGroup>
 
 ## Getting started in 3 steps
 
 <Steps>
-  <Step title="Create an account">
-    Register at [mutasib.com/register](https://www.mutasib.com/register/) or call `POST /api/v1/auth/register`. Choose the **shopowner** role.
+  <Step title="Get your API token">
+    Sign in to your [Mutasib dashboard](https://mutasib.com/dashboard) and create an API token. Copy it immediately — tokens are shown only once.
   </Step>
-  <Step title="Get your JWT token">
-    Log in with `POST /api/v1/auth/login`. The response contains `access` and `refresh` tokens. Pass `Authorization: Bearer <access>` on every authenticated request.
+  <Step title="Authenticate your requests">
+    Pass `Authorization: Bearer YOUR_API_TOKEN` on every request. All API endpoints are prefixed with `https://api.mutasib.com/api/v1/`.
   </Step>
-  <Step title="Create your shop">
-    Call `POST /api/v1/shops/` with your shop name, address, and category. You'll receive a `shop_id` you'll use throughout the API.
+  <Step title="Call the API against your shop">
+    Use your shop ID (from the dashboard) to read shop details, manage products, and record sales — for example, `GET /api/v1/shops/{shop_id}`.
   </Step>
 </Steps>
 
 <Note>
-All API endpoints are prefixed with `https://api.mutasib.com`. JWT tokens expire periodically — use `POST /api/v1/auth/refresh` with your `refresh` token to get a new `access` token without logging in again.
+  API tokens are not available on a free trial. An active paid plan is required to create and use them.
 </Note>

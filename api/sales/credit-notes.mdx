@@ -21,12 +21,15 @@ Send a `POST` request to create a new credit note for a customer. You must suppl
 <ParamField path="customer_name" type="string">
   Name of the customer who owes the balance. Defaults to an empty string if omitted.
 </ParamField>
+
 <ParamField path="amount" type="number" required>
   The amount owed, as a positive decimal number.
 </ParamField>
+
 <ParamField path="note" type="string">
   A free-text note describing what the debt is for (e.g. `"Weekly groceries — not paid"`). Defaults to `""`.
 </ParamField>
+
 <ParamField path="due_date" type="string">
   Optional ISO 8601 date by which payment is expected (e.g. `"2024-02-15"`). If omitted, no due date is set.
 </ParamField>
@@ -48,30 +51,39 @@ curl -X POST https://api.mutasib.com/api/v1/credit-notes/42/ \
 <ResponseField name="id" type="integer">
   Unique ID of the credit note.
 </ResponseField>
+
 <ResponseField name="shop_id" type="integer">
   ID of the shop that issued the credit note.
 </ResponseField>
+
 <ResponseField name="shop_name" type="string">
   Display name of the issuing shop.
 </ResponseField>
+
 <ResponseField name="customer_name" type="string">
   Name of the customer who owes the balance.
 </ResponseField>
+
 <ResponseField name="amount" type="string">
   The outstanding amount, as a decimal string.
 </ResponseField>
+
 <ResponseField name="note" type="string">
   Free-text note attached to this credit note.
 </ResponseField>
+
 <ResponseField name="status" type="string">
   Current status of the credit note. One of `pending`, `paid`, or `cancelled`.
 </ResponseField>
+
 <ResponseField name="due_date" type="string">
   ISO 8601 due date, if set. May be `null`.
 </ResponseField>
+
 <ResponseField name="created_at" type="string">
   ISO 8601 timestamp of when the credit note was created.
 </ResponseField>
+
 <ResponseField name="updated_at" type="string">
   ISO 8601 timestamp of the most recent update.
 </ResponseField>
@@ -107,6 +119,7 @@ Update the status or note text of an existing credit note. Use this endpoint to 
 <ParamField path="status" type="string">
   New status for the credit note. Accepted values: `pending`, `paid`, `cancelled`.
 </ParamField>
+
 <ParamField path="note" type="string">
   Updated free-text note. Replaces the existing note text if provided.
 </ParamField>
@@ -123,29 +136,10 @@ Returns the updated `CreditNoteOut` object.
 
 ---
 
-## My Credit Notes (Customer View)
-
-Customers can retrieve their own outstanding credit notes without needing shop-owner credentials. Mutasib matches notes against the authenticated user's username or email address.
-
-**`GET /api/v1/credit-notes/my/`**
-
-<ParamField query="status" type="string">
-  Filter by note status. Accepted values: `pending`, `paid`, `cancelled`.
-</ParamField>
-
-```bash
-curl "https://api.mutasib.com/api/v1/credit-notes/my/?status=pending" \
-  -H "Authorization: Bearer <customer-token>"
-```
-
-Returns an array of `CreditNoteOut` objects belonging to the authenticated customer across all shops.
-
----
-
 ## Status Reference
 
 | Status | Meaning |
-|---|---|
+| --- | --- |
 | `pending` | The debt is outstanding and not yet settled. |
 | `paid` | The customer has paid the full amount. |
 | `cancelled` | The note was voided and no longer applies. |
@@ -159,30 +153,39 @@ A note can only move from `pending` → `paid` or `pending` → `cancelled`. Onc
 <ResponseField name="id" type="integer">
   Unique ID of the credit note.
 </ResponseField>
+
 <ResponseField name="shop_id" type="integer">
   ID of the shop that issued the note.
 </ResponseField>
+
 <ResponseField name="shop_name" type="string">
   Display name of the issuing shop.
 </ResponseField>
+
 <ResponseField name="customer_name" type="string">
   Name of the customer who owes the balance.
 </ResponseField>
+
 <ResponseField name="amount" type="string">
   Amount owed, as a decimal string.
 </ResponseField>
+
 <ResponseField name="note" type="string">
   Descriptive note attached to the record.
 </ResponseField>
+
 <ResponseField name="status" type="string">
   `pending`, `paid`, or `cancelled`.
 </ResponseField>
+
 <ResponseField name="due_date" type="string">
   ISO 8601 due date, or `null` if not set.
 </ResponseField>
+
 <ResponseField name="created_at" type="string">
   ISO 8601 creation timestamp.
 </ResponseField>
+
 <ResponseField name="updated_at" type="string">
   ISO 8601 timestamp of the last update.
 </ResponseField>

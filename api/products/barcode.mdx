@@ -1,10 +1,10 @@
 ---
 title: "Barcode Lookup: Shop Inventory and OpenFood Database"
 sidebarTitle: "Barcode Lookup"
-description: "Look up products by barcode in your shop inventory or the global OpenFood Facts database. Supports country filtering and one-click import into your shop."
+description: "Look up products by barcode in your shop inventory or the global OpenFood Facts database. Supports country filtering, keyword search, and category browsing."
 ---
 
-Mutasib supports barcode lookups in two places: your shop's own inventory, and the global OpenFood Facts database. Use the shop barcode endpoint at the point of sale to retrieve a product instantly by scanning its barcode. Use the OpenFood endpoints to enrich your catalog with product data from a crowd-sourced global database of millions of packaged goods — and import them directly into your shop with a single API call.
+Mutasib supports barcode lookups in two places: your shop's own inventory, and the global OpenFood Facts database. Use the shop barcode endpoint at the point of sale to retrieve a product instantly by scanning its barcode. Use the OpenFood endpoints to look up, search, and browse product data from a crowd-sourced global database of millions of packaged goods.
 
 ---
 
@@ -24,7 +24,7 @@ curl https://api.mutasib.com/api/v1/shops/42/products/barcode/6281234567890/ \
 Returns `200 OK` with a [ProductOut](/api/products/overview#productout-response-fields) object if a product with that barcode exists in your shop. Returns `404 Not Found` if no match is found.
 
 <Tip>
-  When a barcode scan returns `404` in your shop, use the [OpenFood barcode lookup](#openfood-barcode-lookup) to check the global database and then [import the product](#import-from-openfood) into your catalog automatically.
+  When a barcode scan returns `404` in your shop, use the [OpenFood barcode lookup](#openfood-barcode-lookup) to check the global database, then create the product in your shop with [`POST /api/v1/shops/{shop_id}/products/`](/api/products/overview#create-a-product).
 </Tip>
 
 ---
@@ -39,7 +39,7 @@ Looks up a barcode in the OpenFood Facts global product database. This is useful
 
 ### Query parameters
 
-<ParamField query="country" type="string" default='"world"'>
+<ParamField query="country" default='"world"' type="string">
   Restrict results to products available in a specific country locale (e.g., `"sa"` for Saudi Arabia, `"eg"` for Egypt). Defaults to `"world"` for global results.
 </ParamField>
 
@@ -70,15 +70,15 @@ Searches the OpenFood Facts database by product name or keyword. Use this to bro
   The search query (e.g., `"milk"`, `"olive oil"`, `"rice"`).
 </ParamField>
 
-<ParamField query="page" type="integer" default="1">
+<ParamField query="page" default="1" type="integer">
   Page number for paginated results.
 </ParamField>
 
-<ParamField query="page_size" type="integer" default="10">
+<ParamField query="page_size" default="10" type="integer">
   Number of results per page.
 </ParamField>
 
-<ParamField query="country" type="string" default='"world"'>
+<ParamField query="country" default='"world"' type="string">
   Filter results by country locale.
 </ParamField>
 
@@ -107,15 +107,15 @@ Browses the OpenFood Facts database by a category slug (e.g., `dairy`, `beverage
 
 ### Query parameters
 
-<ParamField query="page" type="integer" default="1">
+<ParamField query="page" default="1" type="integer">
   Page number for paginated results.
 </ParamField>
 
-<ParamField query="page_size" type="integer" default="12">
+<ParamField query="page_size" default="12" type="integer">
   Number of results per page.
 </ParamField>
 
-<ParamField query="country" type="string" default='"world"'>
+<ParamField query="country" default='"world"' type="string">
   Filter results by country locale (e.g., `"sa"` for Saudi Arabia, `"eg"` for Egypt). Defaults to `"world"` for global results.
 </ParamField>
 
@@ -126,45 +126,6 @@ curl "https://api.mutasib.com/api/v1/products/browse/dairy?page=1&page_size=12&c
 
 Returns `200 OK` with a paginated list of OpenFood product objects in the specified category.
 
----
-
-## Import from OpenFood
-
-<br />
-
-`POST /api/v1/products/import`
-
-Imports a product from the OpenFood Facts database directly into your shop's inventory. Mutasib fetches the product data from OpenFood using the barcode and creates a new product in your shop — no manual data entry required.
-
-### Query parameters
-
-<ParamField query="shop_id" type="integer" required>
-  The ID of the shop to import the product into.
-</ParamField>
-
-<ParamField query="barcode" type="string" required>
-  The barcode of the OpenFood product to import.
-</ParamField>
-
-<ParamField query="price" type="number" default="0">
-  The selling price to assign to the imported product. You can update this after import.
-</ParamField>
-
-<ParamField query="stock" type="integer" default="0">
-  The initial stock quantity to assign. You can update this after import.
-</ParamField>
-
-<ParamField query="country" type="string" default='"world"'>
-  The OpenFood country locale to use when fetching the product data.
-</ParamField>
-
-```bash
-curl -X POST "https://api.mutasib.com/api/v1/products/import?shop_id=42&barcode=6281234567890&price=34.99&stock=50&country=sa" \
-  -H "Authorization: Bearer <your_token>"
-```
-
-Returns `201 Created` with a [ProductOut](/api/products/overview#productout-response-fields) object representing the newly created product in your shop, pre-populated with the product name, description, and image from OpenFood Facts.
-
 <Tip>
-  Use the import endpoint to populate your catalog quickly when onboarding. Scan or paste barcodes from your existing inventory, import each product from OpenFood, then do a single [batch price update](/api/products/overview#batch-price-update) to set your selling prices all at once.
+  Use OpenFood lookup, search, and browse to enrich your catalog. When you have the data you need, create the product in your shop with [`POST /api/v1/shops/{shop_id}/products/`](/api/products/overview#create-a-product).
 </Tip>

@@ -4,7 +4,7 @@ sidebarTitle: "Public API"
 description: "Search products and shops publicly without authentication. Find nearby shops, browse listings, and access receipts via the Mutasib API."
 ---
 
-The public API endpoints require no authentication — you can call them directly from a browser, a mobile app, or any backend service without a JWT token. Use them to build customer-facing product search, shop discovery pages, nearby-store finders, and receipt viewers.
+The public API endpoints require no authentication — you can call them directly from a browser, a mobile app, or any backend service without an API token. Use them to build customer-facing product search, shop discovery pages, nearby-store finders, and receipt viewers.
 
 <Note>
   Shops are only returned by public endpoints if they are **approved and active** in the Mutasib platform. Individual products must have `is_public` set to `true` to appear in public search results and shop product listings.
@@ -19,15 +19,19 @@ Search across all public products on the platform with optional filters for cate
 <ParamField query="q" type="string">
   Search query string. Matches against product names, descriptions, and barcodes.
 </ParamField>
+
 <ParamField query="category" type="string">
   Filter results to a specific product category (e.g. `grocery`, `dairy`, `beverages`).
 </ParamField>
+
 <ParamField query="min_price" type="number">
   Minimum unit price filter.
 </ParamField>
+
 <ParamField query="max_price" type="number">
   Maximum unit price filter.
 </ParamField>
+
 <ParamField query="shop_id" type="integer">
   Restrict results to a single shop.
 </ParamField>
@@ -81,6 +85,7 @@ List all public products offered by a specific shop. Supports search and categor
 <ParamField query="search" type="string">
   Filter products by name or barcode.
 </ParamField>
+
 <ParamField query="category_id" type="integer">
   Filter products by category ID.
 </ParamField>
@@ -102,9 +107,11 @@ Find approved shops within a given radius of a geographic coordinate. Results ar
 <ParamField query="lat" type="number" required>
   Latitude of the search origin (decimal degrees, e.g. `36.7`).
 </ParamField>
+
 <ParamField query="lng" type="number" required>
   Longitude of the search origin (decimal degrees, e.g. `3.05`).
 </ParamField>
+
 <ParamField query="radius" type="number">
   Search radius in kilometres. Defaults to `10`.
 </ParamField>

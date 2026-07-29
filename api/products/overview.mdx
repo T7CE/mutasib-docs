@@ -1,10 +1,10 @@
 ---
 title: "Products API: Create, List, and Manage Shop Products"
 sidebarTitle: "Products"
-description: "Create, list, update, search, and deactivate products in your Mutasib shop. Includes image upload, batch operations, and public visibility toggling."
+description: "Create, list, update, search, and deactivate products in your Mutasib shop. Includes image upload and per-product management."
 ---
 
-The Products API lets you manage every item your shop sells. You can create products with pricing and stock details, upload images, assign them to categories, and control whether they appear in your public storefront. Batch operations make it easy to update prices or toggle visibility across many products at once.
+The Products API lets you manage every item your shop sells. You can create products with pricing and stock details, upload images, assign them to categories, and search or update them individually.
 
 ---
 
@@ -26,27 +26,27 @@ Creates a new product in the specified shop. Only `name` and `price` are require
   The selling price of the product. Must be greater than or equal to `0`.
 </ParamField>
 
-<ParamField body="description" type="string" default='""'>
+<ParamField body="description" default='""' type="string">
   A detailed description of the product shown to customers.
 </ParamField>
 
-<ParamField body="barcode" type="string" default='""'>
+<ParamField body="barcode" default='""' type="string">
   The product's barcode (EAN, UPC, or custom). Used for POS scanning and barcode lookup.
 </ParamField>
 
-<ParamField body="cost" type="number" default="0">
+<ParamField body="cost" default="0" type="number">
   The purchase or production cost of the product. Used for profit margin calculations.
 </ParamField>
 
-<ParamField body="stock" type="integer" default="0">
+<ParamField body="stock" default="0" type="integer">
   Initial stock quantity.
 </ParamField>
 
-<ParamField body="low_stock_threshold" type="integer" default="10">
+<ParamField body="low_stock_threshold" default="10" type="integer">
   The stock level at which a low-stock alert is triggered.
 </ParamField>
 
-<ParamField body="unit" type="string" default='"piece"'>
+<ParamField body="unit" default='"piece"' type="string">
   Unit of measurement (e.g., `"piece"`, `"kg"`, `"litre"`).
 </ParamField>
 
@@ -54,11 +54,7 @@ Creates a new product in the specified shop. Only `name` and `price` are require
   ID of the category to assign this product to. Must belong to the same shop. Optional.
 </ParamField>
 
-<ParamField body="is_public" type="boolean" default="false">
-  Whether the product is visible on the public storefront. Requires the shop's `is_visible_in_search` to be `true`.
-</ParamField>
-
-<ParamField body="image_url" type="string" default='""'>
+<ParamField body="image_url" default='""' type="string">
   A URL pointing to the product's primary image. To upload binary files directly, use the [Upload product image](#upload-a-product-image) endpoint after creation.
 </ParamField>
 
@@ -75,8 +71,7 @@ curl -X POST https://api.mutasib.com/api/v1/shops/42/products/ \
     "low_stock_threshold": 20,
     "unit": "bottle",
     "category_id": 7,
-    "description": "Cold-pressed extra virgin olive oil from local farms.",
-    "is_public": true
+    "description": "Cold-pressed extra virgin olive oil from local farms."
   }'
 ```
 
@@ -207,10 +202,6 @@ Partially updates one or more fields on a product. Only the fields you include a
   Set to `false` to deactivate the product without deleting it.
 </ParamField>
 
-<ParamField body="is_public" type="boolean">
-  Toggle public storefront visibility.
-</ParamField>
-
 ```bash
 curl -X PATCH https://api.mutasib.com/api/v1/shops/42/products/301/ \
   -H "Authorization: Bearer <your_token>" \
@@ -297,112 +288,6 @@ Returns `204 No Content` on success.
 
 ---
 
-## Toggle public visibility
-
-<br />
-
-`POST /api/v1/shops/{shop_id}/products/{product_id}/toggle-public`
-
-Flips the `is_public` flag on the product. If the product is currently public, it becomes private; if it is private, it becomes public. This is a convenience shortcut for the PATCH update.
-
-```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/products/301/toggle-public \
-  -H "Authorization: Bearer <your_token>"
-```
-
-Returns `200 OK` with the updated [ProductOut](#productout-response-fields) object reflecting the new `is_public` value.
-
----
-
-## Batch price update
-
-<br />
-
-`POST /api/v1/shops/{shop_id}/products/batch-price`
-
-Sets the same price on multiple products in a single request. Useful for promotional pricing or bulk cost adjustments.
-
-### Request body
-
-<ParamField body="product_ids" type="integer[]" required>
-  Array of product IDs to update.
-</ParamField>
-
-<ParamField body="price" type="number" required>
-  The new price to apply to all specified products.
-</ParamField>
-
-```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/products/batch-price \
-  -H "Authorization: Bearer <your_token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "product_ids": [301, 302, 305],
-    "price": 24.99
-  }'
-```
-
-Returns `200 OK` with a summary of how many products were updated.
-
----
-
-## Batch visibility update
-
-<br />
-
-`POST /api/v1/shops/{shop_id}/products/batch-visibility`
-
-Sets the `is_public` flag to the same value for multiple products at once.
-
-### Request body
-
-<ParamField body="product_ids" type="integer[]" required>
-  Array of product IDs to update.
-</ParamField>
-
-<ParamField body="is_public" type="boolean" required>
-  The new public visibility value to apply to all specified products.
-</ParamField>
-
-```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/products/batch-visibility \
-  -H "Authorization: Bearer <your_token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "product_ids": [301, 302, 305],
-    "is_public": true
-  }'
-```
-
-Returns `200 OK` with a summary of how many products were updated.
-
----
-
-## Public product summary
-
-<br />
-
-`GET /api/v1/shops/{shop_id}/products/public-summary`
-
-Returns a summary of the shop's public product count relative to the plan's publication limit. Use this to check how many products are currently set as public and whether the shop has headroom left to make more products visible on the storefront.
-
-```bash
-curl https://api.mutasib.com/api/v1/shops/42/products/public-summary \
-  -H "Authorization: Bearer <your_token>"
-```
-
-Returns `200 OK` with an object containing the fields below.
-
-<ResponseField name="public_count" type="integer">
-  The number of products currently marked as public in this shop.
-</ResponseField>
-
-<ResponseField name="plan_limit" type="integer">
-  The maximum number of public products allowed under the shop's current plan.
-</ResponseField>
-
----
-
 ## ProductOut response fields
 
 <ResponseField name="id" type="integer">
@@ -457,22 +342,22 @@ Returns `200 OK` with an object containing the fields below.
   Whether the product is active and visible in POS and inventory views.
 </ResponseField>
 
-<ResponseField name="is_public" type="boolean">
-  Whether the product is visible on the public storefront.
-</ResponseField>
-
 <ResponseField name="images" type="array">
   List of image objects attached to this product.
+
   <Expandable title="properties">
     <ResponseField name="id" type="integer">
       Unique image ID.
     </ResponseField>
+
     <ResponseField name="image" type="string">
       Public URL of the uploaded image.
     </ResponseField>
+
     <ResponseField name="alt_text" type="string">
       Descriptive alt text for the image.
     </ResponseField>
+
     <ResponseField name="sort_order" type="integer">
       Display order; lower numbers appear first.
     </ResponseField>

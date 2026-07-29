@@ -1,54 +1,22 @@
 ---
 title: "Shops: Your Core Business Entity in Mutasib"
 sidebarTitle: "Shops"
-description: "A shop is the root resource in Mutasib. Every product, sale, and cashier belongs to a shop. Learn about the lifecycle, data model, and plan tiers."
+description: "A shop is the root resource in Mutasib. Every product, sale, and cashier belongs to a shop. Learn about the data model and API access."
 ---
 
-A shop is the central resource that ties everything together in Mutasib. Every product you list, every sale you record, every cashier you add, and every analytics report you generate belongs to a specific shop. Before you can do anything else with the API, you need a shop — and before that shop appears in public search results, it must be approved.
-
-## Shop Lifecycle
-
-When you create a shop, it starts in a **pending** state. Mutasib reviews the submission and transitions it to **approved**, at which point your shop becomes **active** and eligible to appear in public search results. You can also deactivate a shop temporarily and reactivate it whenever you're ready — your data is never lost.
-
-<Steps>
-  <Step title="Create">
-    Submit a `POST /api/v1/shops/` request with your shop details. The shop is created with `is_approved: false` and `is_active: false`.
-  </Step>
-  <Step title="Pending Approval">
-    Mutasib reviews your shop. During this period the shop is visible to you via the API but not to the public.
-  </Step>
-  <Step title="Approved">
-    Once approved, `is_approved` is set to `true`. You can now activate the shop and begin recording sales.
-  </Step>
-  <Step title="Active in Public Search">
-    With `is_active: true` and `is_visible_in_search: true`, your shop surfaces in customer-facing search results.
-  </Step>
-</Steps>
+A shop is the central resource that ties everything together in Mutasib. Every product you list, every sale you record, and every analytics report you generate belongs to a specific shop.
 
 <Note>
-  A shop must be approved before it can appear in public search, regardless of its `is_active` or `is_visible_in_search` settings. Unapproved shops are invisible to customers.
+  Shops are created and administered from the [Mutasib dashboard](https://mutasib.com/dashboard). The API exposes read and update operations on an existing shop — it does not create, activate, deactivate, or delete shops.
 </Note>
-
-To temporarily take a shop offline without deleting it, use the activate and deactivate endpoints:
-
-```bash
-# Deactivate
-curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/deactivate \
-  -H "Authorization: Bearer <token>"
-
-# Reactivate
-curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/activate \
-  -H "Authorization: Bearer <token>"
-```
 
 ## Shop Data Model
 
 The table below describes the key fields returned in a `ShopOut` response object.
 
 | Field | Type | Description |
-|---|---|---|
-| `id` | string (UUID) | Unique identifier for the shop |
-| `owner_id` | string (UUID) | ID of the user account that owns this shop |
+| --- | --- | --- |
+| `id` | integer | Unique identifier for the shop |
 | `name` | string | Display name of the shop |
 | `description` | string | Short public description shown in search results |
 | `address` | string | Physical street address |
@@ -58,17 +26,12 @@ The table below describes the key fields returned in a `ShopOut` response object
 | `latitude` | float \| null | Optional GPS latitude for geo-search |
 | `longitude` | float \| null | Optional GPS longitude for geo-search |
 | `is_active` | boolean | Whether the shop is currently online |
-| `is_approved` | boolean | Whether Mutasib has approved the shop |
-| `is_visible_in_search` | boolean | Whether the shop surfaces in public customer search |
-| `plan` | string | Active plan: `free`, `starter`, or `pro` |
+| `plan` | string | Active plan on the shop |
 | `plan_features` | object | Feature flags and limits enforced by the current plan |
-| `max_cashiers` | integer | Maximum number of cashier accounts allowed on this plan |
 
 ## Opening Hours Format
 
 The `opening_hours` field is a JSON object keyed by lowercase day name. Each day contains an `open` and `close` time in 24-hour `HH:MM` format. Set a day to `null` to mark it as closed.
-
-Here is a complete example covering a shop that is closed on Sundays:
 
 ```json
 {
@@ -84,16 +47,12 @@ Here is a complete example covering a shop that is closed on Sundays:
 }
 ```
 
-<Tip>
-  You only need to include the days you want to set. Days omitted from the object are treated as closed by default.
-</Tip>
-
 ## Shop Categories
 
-The `category` field classifies your business and helps customers find you in filtered searches. You set it once at creation and can update it with a `PATCH` request. The following values are supported:
+The `category` field classifies your business and helps customers find you in filtered searches. Common values include:
 
 | Value | Business type |
-|---|---|
+| --- | --- |
 | `grocery` | Supermarkets and general grocery stores |
 | `restaurant` | Dine-in and takeaway food service |
 | `pharmacy` | Pharmacies and drug stores |
@@ -103,51 +62,17 @@ The `category` field classifies your business and helps customers find you in fi
 | `butcher` | Meat and poultry shops |
 | `bookstore` | Books, stationery, and educational supplies |
 
-<Info>
-  If your business type does not match one of the listed values, choose the closest category. Additional categories may be added in future API versions.
-</Info>
-
 ## API Endpoints
 
-The following endpoints let you manage the full lifecycle of a shop. All requests require a valid JWT Bearer token in the `Authorization` header.
+The following endpoints let you read and update a shop. All requests require a valid API token in the `Authorization` header.
 
 <AccordionGroup>
-  <Accordion title="POST /api/v1/shops/ — Create a shop">
-    Creates a new shop owned by the authenticated user. The shop starts in a pending-approval state.
-
-    ```bash
-    curl -X POST https://api.mutasib.com/api/v1/shops/ \
-      -H "Authorization: Bearer <token>" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "name": "Corner Grocery",
-        "description": "Fresh produce and daily essentials",
-        "address": "12 Elm Street, Algiers",
-        "category": "grocery",
-        "phone_number": "+213555000111",
-        "opening_hours": {
-          "monday":  { "open": "08:00", "close": "20:00" },
-          "tuesday": { "open": "08:00", "close": "20:00" }
-        }
-      }'
-    ```
-  </Accordion>
-
-  <Accordion title="GET /api/v1/shops/mine — List owned shops">
-    Returns all shops owned by the authenticated user, including those pending approval.
-
-    ```bash
-    curl https://api.mutasib.com/api/v1/shops/mine \
-      -H "Authorization: Bearer <token>"
-    ```
-  </Accordion>
-
   <Accordion title="GET /api/v1/shops/{shop_id} — Get shop details">
-    Returns the full `ShopOut` object for a single shop. Public fields are accessible without authentication; owner-only fields (plan details, cashier limits) require a valid token.
+    Returns the full `ShopOut` object for a single shop.
 
     ```bash
-    curl https://api.mutasib.com/api/v1/shops/{shop_id} \
-      -H "Authorization: Bearer <token>"
+    curl https://api.mutasib.com/api/v1/shops/42 \
+      -H "Authorization: Bearer YOUR_API_TOKEN"
     ```
   </Accordion>
 
@@ -155,41 +80,10 @@ The following endpoints let you manage the full lifecycle of a shop. All request
     Partially updates shop fields. Only include the fields you want to change.
 
     ```bash
-    curl -X PATCH https://api.mutasib.com/api/v1/shops/{shop_id} \
-      -H "Authorization: Bearer <token>" \
+    curl -X PATCH https://api.mutasib.com/api/v1/shops/42 \
+      -H "Authorization: Bearer YOUR_API_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{ "description": "Now open on Sundays!" }'
-    ```
-  </Accordion>
-
-  <Accordion title="DELETE /api/v1/shops/{shop_id} — Delete a shop">
-    Permanently deletes the shop and all associated data. This action cannot be undone. A successful deletion returns `204 No Content` with an empty response body.
-
-    ```bash
-    curl -X DELETE https://api.mutasib.com/api/v1/shops/{shop_id} \
-      -H "Authorization: Bearer <token>"
-    ```
-
-    <Warning>
-      Deleting a shop is irreversible. All products, sales history, cashier accounts, and analytics data are permanently removed.
-    </Warning>
-  </Accordion>
-
-  <Accordion title="POST /api/v1/shops/{shop_id}/activate — Activate a shop">
-    Sets `is_active` to `true`, making the shop visible to customers (assuming it is approved).
-
-    ```bash
-    curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/activate \
-      -H "Authorization: Bearer <token>"
-    ```
-  </Accordion>
-
-  <Accordion title="POST /api/v1/shops/{shop_id}/deactivate — Deactivate a shop">
-    Sets `is_active` to `false`, hiding the shop from public search without deleting any data.
-
-    ```bash
-    curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/deactivate \
-      -H "Authorization: Bearer <token>"
     ```
   </Accordion>
 </AccordionGroup>

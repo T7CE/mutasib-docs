@@ -23,8 +23,8 @@
   "navbar": {
     "primary": {
       "type": "button",
-      "label": "Start Free Trial",
-      "href": "https://www.mutasib.com/register/"
+      "label": "Get API Key",
+      "href": "https://mutasib.com/dashboard"
     }
   },
   "navigation": {
@@ -45,16 +45,12 @@
             "pages": [
               "concepts/shops",
               "concepts/products",
-              "concepts/sales-inventory",
-              "concepts/plans"
+              "concepts/sales-inventory"
             ]
           },
           {
             "group": "Guides",
             "pages": [
-              "guides/manage-staff",
-              "guides/offline-sync",
-              "guides/ai-features",
               "guides/public-search"
             ]
           }
@@ -64,21 +60,9 @@
         "tab": "API Reference",
         "groups": [
           {
-            "group": "Auth",
-            "pages": [
-              "api/auth/register",
-              "api/auth/login",
-              "api/auth/two-factor",
-              "api/auth/profile"
-            ]
-          },
-          {
             "group": "Shops",
             "pages": [
-              "api/shops/overview",
-              "api/shops/staff-invitations",
-              "api/shops/plans",
-              "api/shops/notifications"
+              "api/shops/overview"
             ]
           },
           {
@@ -86,8 +70,7 @@
             "pages": [
               "api/products/overview",
               "api/products/categories",
-              "api/products/barcode",
-              "api/products/import"
+              "api/products/barcode"
             ]
           },
           {
@@ -95,23 +78,14 @@
             "pages": [
               "api/sales/overview",
               "api/inventory/overview",
-              "api/sales/credit-notes"
-            ]
-          },
-          {
-            "group": "Analytics & AI",
-            "pages": [
-              "api/analytics/overview",
-              "api/ai/overview",
-              "api/reports/overview"
+              "api/sales/credit-notes",
+              "api/analytics/overview"
             ]
           },
           {
             "group": "Public & Misc",
             "pages": [
-              "api/public/overview",
-              "api/sync/overview",
-              "api/notifications/overview"
+              "api/public/overview"
             ]
           }
         ]

@@ -1,266 +1,55 @@
 ---
 title: "Quick Start: Make Your First Mutasib API Call in Minutes"
 sidebarTitle: "Quick Start"
-description: "Register an account, verify your email, create a shop, add your first product, and record a sale — all through the Mutasib REST API."
+description: "Generate an API token, create a shop, add your first product, and record a sale — all through the Mutasib REST API."
 ---
 
-This guide walks you through the five essential steps to go from zero to a working Mutasib integration. By the end you will have a verified account, a live shop, a product in your catalog, and your first recorded sale — with real API calls you can run right now. Every subsequent API feature (inventory alerts, analytics, multi-cashier flows) builds on exactly this foundation.
+This guide walks you through the essential steps to go from zero to a working Mutasib integration. By the end you will have an API token, a product in your shop's catalog, and your first recorded sale.
+
+<Note>
+  API tokens are not available on a free trial. An active paid plan is required to create and use them. Shops themselves are created and administered from the [Mutasib dashboard](https://mutasib.com/dashboard); the API operates on an existing shop.
+</Note>
 
 <Steps>
-  <Step title="Register an account">
-    Send a `POST` request to `/api/v1/auth/register` with your email, a username, and a password. The `role` field defaults to `shopowner`; pass `cashier` if you are creating a cashier account instead.
+  <Step title="Generate an API token">
+    Sign in to your [Mutasib dashboard](https://mutasib.com/dashboard) and create a new API token. Copy the token immediately — it is shown only once at creation time. Store it in a secure secret store such as an environment variable or a secrets manager.
 
-    <CodeGroup>
-      ```bash curl
-      curl -X POST https://api.mutasib.com/api/v1/auth/register \
-        -H "Content-Type: application/json" \
-        -d '{
-          "email": "you@example.com",
-          "username": "yourname",
-          "password": "Sup3rS3cure!",
-          "role": "shopowner"
-        }'
-      ```
+    Pass the token in the `Authorization` header on every request:
 
-      ```python Python
-      import requests
+    ```text
+    Authorization: Bearer YOUR_API_TOKEN
+    ```
+  </Step>
+  <Step title="Get your shop details">
+    Look up your shop by ID to confirm the token works and grab any details you need.
 
-      response = requests.post(
-          "https://api.mutasib.com/api/v1/auth/register",
-          json={
-              "email": "you@example.com",
-              "username": "yourname",
-              "password": "Sup3rS3cure!",
-              "role": "shopowner",
-          },
-      )
-      print(response.json())
-      ```
-
-      ```js JavaScript
-      const response = await fetch(
-        "https://api.mutasib.com/api/v1/auth/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: "you@example.com",
-            username: "yourname",
-            password: "Sup3rS3cure!",
-            role: "shopowner",
-          }),
-        }
-      );
-      const data = await response.json();
-      console.log(data);
-      ```
-    </CodeGroup>
-
-    A successful registration returns `201 Created` with a token pair:
-
-    ```json
-    {
-      "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "token_type": "bearer"
-    }
+    ```bash
+    curl https://api.mutasib.com/api/v1/shops/42 \
+      -H "Authorization: Bearer YOUR_API_TOKEN"
     ```
 
-    <Note>
-      Mutasib sends a verification email to the address you registered with. You must verify your email before you can log in. Check your inbox (and spam folder) for a message containing your verification link.
-    </Note>
+    Replace `42` with your own shop ID (visible in the dashboard).
   </Step>
-
-  <Step title="Verify your email">
-    Click the link in your verification email, or extract the `token` query parameter from it and call the verify endpoint directly. The token is a one-time code tied to your email address.
-
-    <CodeGroup>
-      ```bash curl
-      curl -X POST \
-        "https://api.mutasib.com/api/v1/auth/verify-email?token=YOUR_VERIFICATION_TOKEN"
-      ```
-
-      ```python Python
-      import requests
-
-      response = requests.post(
-          "https://api.mutasib.com/api/v1/auth/verify-email",
-          params={"token": "YOUR_VERIFICATION_TOKEN"},
-      )
-      print(response.json())
-      ```
-
-      ```js JavaScript
-      const response = await fetch(
-        "https://api.mutasib.com/api/v1/auth/verify-email?token=YOUR_VERIFICATION_TOKEN",
-        { method: "POST" }
-      );
-      const data = await response.json();
-      console.log(data);
-      ```
-    </CodeGroup>
-
-    On success the API returns a fresh token pair:
-
-    ```json
-    {
-      "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-    ```
-
-    Store both tokens. You will use the `access` token in every subsequent request, and the `refresh` token to renew it when it expires. If you did not receive the email, call `POST /api/v1/auth/resend-verification?email=you@example.com` to request a new one.
-  </Step>
-
-  <Step title="Create your shop">
-    With a verified account and a valid access token, create your first shop by posting to `/api/v1/shops/`. The `name`, `address`, and `category` fields are required.
-
-    <CodeGroup>
-      ```bash curl
-      curl -X POST https://api.mutasib.com/api/v1/shops/ \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-        -d '{
-          "name": "Green Leaf Grocery",
-          "address": "12 Market Street, Riyadh",
-          "category": "grocery",
-          "description": "Fresh produce and daily essentials.",
-          "phone_number": "+966501234567"
-        }'
-      ```
-
-      ```python Python
-      import requests
-
-      headers = {
-          "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-          "Content-Type": "application/json",
-      }
-      payload = {
-          "name": "Green Leaf Grocery",
-          "address": "12 Market Street, Riyadh",
-          "category": "grocery",
-          "description": "Fresh produce and daily essentials.",
-          "phone_number": "+966501234567",
-      }
-      response = requests.post(
-          "https://api.mutasib.com/api/v1/shops/",
-          json=payload,
-          headers=headers,
-      )
-      print(response.json())
-      ```
-
-      ```js JavaScript
-      const response = await fetch("https://api.mutasib.com/api/v1/shops/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer YOUR_ACCESS_TOKEN",
-        },
-        body: JSON.stringify({
-          name: "Green Leaf Grocery",
-          address: "12 Market Street, Riyadh",
-          category: "grocery",
-          description: "Fresh produce and daily essentials.",
-          phone_number: "+966501234567",
-        }),
-      });
-      const data = await response.json();
-      console.log(data);
-      ```
-    </CodeGroup>
-
-    The response includes your new shop's `id`. Copy it — you need it for every subsequent shop-scoped request.
-
-    ```json
-    {
-      "id": "shop_01j9xkz3p4qr5t6uvw7yz8abc",
-      "owner_id": "usr_01j9xkz3p4qr5t6uvw7yz8xyz",
-      "name": "Green Leaf Grocery",
-      "address": "12 Market Street, Riyadh",
-      "category": "grocery",
-      "description": "Fresh produce and daily essentials.",
-      "phone_number": "+966501234567",
-      "is_active": true,
-      "is_approved": false,
-      "plan": "free",
-      "max_cashiers": 1,
-      "is_visible_in_search": false,
-      "created_at": "2024-11-01T10:00:00Z",
-      "updated_at": "2024-11-01T10:00:00Z"
-    }
-    ```
-
-    <Info>
-      New shops start with `is_approved: false`. Your shop is fully functional for API use immediately; the approval flag affects public discoverability in Mutasib's search directory.
-    </Info>
-  </Step>
-
   <Step title="Add a product">
-    Add your first product to the shop's catalog. Replace `{shop_id}` with the `id` value from the previous step.
+    Add your first product to the shop's catalog.
 
-    <CodeGroup>
-      ```bash curl
-      curl -X POST https://api.mutasib.com/api/v1/shops/shop_01j9xkz3p4qr5t6uvw7yz8abc/products/ \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-        -d '{
-          "name": "Organic Apples (1 kg)",
-          "price": 12.50,
-          "stock": 200
-        }'
-      ```
-
-      ```python Python
-      import requests
-
-      shop_id = "shop_01j9xkz3p4qr5t6uvw7yz8abc"
-      headers = {
-          "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-          "Content-Type": "application/json",
-      }
-      payload = {
-          "name": "Organic Apples (1 kg)",
-          "price": 12.50,
-          "stock": 200,
-      }
-      response = requests.post(
-          f"https://api.mutasib.com/api/v1/shops/{shop_id}/products/",
-          json=payload,
-          headers=headers,
-      )
-      print(response.json())
-      ```
-
-      ```js JavaScript
-      const shopId = "shop_01j9xkz3p4qr5t6uvw7yz8abc";
-      const response = await fetch(
-        `https://api.mutasib.com/api/v1/shops/${shopId}/products/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer YOUR_ACCESS_TOKEN",
-          },
-          body: JSON.stringify({
-            name: "Organic Apples (1 kg)",
-            price: 12.5,
-            stock: 200,
-          }),
-        }
-      );
-      const data = await response.json();
-      console.log(data);
-      ```
-    </CodeGroup>
+    ```bash
+    curl -X POST https://api.mutasib.com/api/v1/shops/42/products/ \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_API_TOKEN" \
+      -d '{
+        "name": "Organic Apples (1 kg)",
+        "price": 12.50,
+        "stock": 200
+      }'
+    ```
 
     ```json
     {
-      "id": "prod_01j9xkz3p4qr5t6uvw7yz8def",
-      "shop_id": "shop_01j9xkz3p4qr5t6uvw7yz8abc",
+      "id": 301,
+      "shop_id": 42,
       "name": "Organic Apples (1 kg)",
-      "price": 12.50,
+      "price": "12.50",
       "stock": 200,
       "is_active": true,
       "created_at": "2024-11-01T10:05:00Z",
@@ -270,116 +59,63 @@ This guide walks you through the five essential steps to go from zero to a worki
 
     Note the `id` of the product — you need it in the next step.
   </Step>
-
   <Step title="Record a sale">
     Record a point-of-sale transaction by posting to the shop's sales endpoint. Pass an array of `items`, each with a `product_id` and `quantity`. Mutasib automatically decrements stock and issues a receipt token.
 
-    <CodeGroup>
-      ```bash curl
-      curl -X POST https://api.mutasib.com/api/v1/shops/shop_01j9xkz3p4qr5t6uvw7yz8abc/sales/ \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-        -d '{
-          "items": [
-            {
-              "product_id": "prod_01j9xkz3p4qr5t6uvw7yz8def",
-              "quantity": 3
-            }
-          ]
-        }'
-      ```
-
-      ```python Python
-      import requests
-
-      shop_id = "shop_01j9xkz3p4qr5t6uvw7yz8abc"
-      headers = {
-          "Authorization": "Bearer YOUR_ACCESS_TOKEN",
-          "Content-Type": "application/json",
-      }
-      payload = {
-          "items": [
-              {
-                  "product_id": "prod_01j9xkz3p4qr5t6uvw7yz8def",
-                  "quantity": 3,
-              }
-          ]
-      }
-      response = requests.post(
-          f"https://api.mutasib.com/api/v1/shops/{shop_id}/sales/",
-          json=payload,
-          headers=headers,
-      )
-      print(response.json())
-      ```
-
-      ```js JavaScript
-      const shopId = "shop_01j9xkz3p4qr5t6uvw7yz8abc";
-      const response = await fetch(
-        `https://api.mutasib.com/api/v1/shops/${shopId}/sales/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: "Bearer YOUR_ACCESS_TOKEN",
-          },
-          body: JSON.stringify({
-            items: [
-              {
-                product_id: "prod_01j9xkz3p4qr5t6uvw7yz8def",
-                quantity: 3,
-              },
-            ],
-          }),
-        }
-      );
-      const data = await response.json();
-      console.log(data);
-      ```
-    </CodeGroup>
+    ```bash
+    curl -X POST https://api.mutasib.com/api/v1/shops/42/sales/ \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_API_TOKEN" \
+      -d '{
+        "items": [
+          { "product_id": 301, "quantity": 3 }
+        ]
+      }'
+    ```
 
     ```json
     {
-      "id": "sale_01j9xkz3p4qr5t6uvw7yz8ghi",
-      "shop_id": "shop_01j9xkz3p4qr5t6uvw7yz8abc",
-      "total": 37.50,
+      "id": 5001,
+      "shop_id": 42,
+      "total": "37.50",
       "receipt_token": "rcpt_a1b2c3d4e5f6",
       "items": [
         {
-          "product_id": "prod_01j9xkz3p4qr5t6uvw7yz8def",
+          "product_id": 301,
           "product_name": "Organic Apples (1 kg)",
           "quantity": 3,
-          "unit_price": 12.50,
-          "subtotal": 37.50
+          "unit_price": "12.50",
+          "subtotal": "37.50"
         }
       ],
       "created_at": "2024-11-01T10:10:00Z"
     }
     ```
 
-    The `receipt_token` uniquely identifies this transaction and can be shared with the customer or printed on a physical receipt.
+    The `receipt_token` uniquely identifies the transaction and can be used to fetch a shareable receipt via the [Public API](/api/public/overview).
   </Step>
 </Steps>
 
-<Note>
-  Your access token expires after a short window. When you receive a `401 Unauthorized` response, call `POST /api/v1/auth/refresh` with your refresh token in the request body to obtain a new token pair:
-
-  ```bash
-  curl -X POST https://api.mutasib.com/api/v1/auth/refresh \
-    -H "Content-Type: application/json" \
-    -d '{"refresh": "YOUR_REFRESH_TOKEN"}'
-  ```
-
-  Store tokens in environment variables or a secrets manager — never hard-code them in your source code.
-</Note>
+<Tip>
+  Store your API token in environment variables or a secrets manager. Never hard-code it in your source code or commit it to version control. If a token is compromised, revoke it from the dashboard and generate a new one.
+</Tip>
 
 ## Next steps
 
 <CardGroup cols={2}>
   <Card title="Authentication" icon="key" href="/authentication">
-    Learn about token refresh, Google OAuth sign-in, and setting up two-factor authentication for your account.
+    Review the API token scope, allowlist, and error codes.
   </Card>
-  <Card title="Shop Management" icon="store" href="/api/shops/overview">
-    Explore the full Shops API — update settings, manage cashiers, configure opening hours, and more.
+
+  <Card title="Shops API" icon="store" href="/api/shops/overview">
+    Read and update your shop's details and settings.
+  </Card>
+
+  <Card title="Products API" icon="box" href="/api/products/overview">
+    Create, list, update, and manage your product catalog.
+  </Card>
+
+  <Card title="Sales API" icon="receipt" href="/api/sales/overview">
+    Record transactions, list sales history, and fetch daily totals.
   </Card>
 </CardGroup>
