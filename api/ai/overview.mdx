@@ -23,7 +23,7 @@ Returns an AI-generated demand forecast for a single product, based on the shop'
 </ParamField>
 
 ```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/ai/predict \
+curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/ai/predict \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "product_id": 301 }'
@@ -62,7 +62,7 @@ Returns an AI-powered reorder recommendation for a single product, including how
 </ParamField>
 
 ```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/ai/reorder \
+curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/ai/reorder \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "product_id": 301 }'

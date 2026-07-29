@@ -16,7 +16,7 @@ The table below describes the key fields returned in a `ShopOut` response object
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `id` | integer | Unique identifier for the shop |
+| `id` | string (UUID) | Unique identifier for the shop |
 | `name` | string | Display name of the shop |
 | `description` | string | Short public description shown in search results |
 | `address` | string | Physical street address |
@@ -71,7 +71,7 @@ The following endpoints let you read and update a shop. All requests require a v
     Returns the full `ShopOut` object for a single shop.
 
     ```bash
-    curl https://api.mutasib.com/api/v1/shops/42 \
+    curl https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41 \
       -H "Authorization: Bearer YOUR_API_TOKEN"
     ```
   </Accordion>
@@ -80,7 +80,7 @@ The following endpoints let you read and update a shop. All requests require a v
     Partially updates shop fields. Only include the fields you want to change.
 
     ```bash
-    curl -X PATCH https://api.mutasib.com/api/v1/shops/42 \
+    curl -X PATCH https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41 \
       -H "Authorization: Bearer YOUR_API_TOKEN" \
       -H "Content-Type: application/json" \
       -d '{ "description": "Now open on Sundays!" }'

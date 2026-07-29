@@ -13,7 +13,7 @@ The table below covers every key field in the `ProductOut` schema returned by th
 | Field | Type | Description |
 | --- | --- | --- |
 | `id` | integer | Unique product identifier |
-| `shop_id` | integer | The shop this product belongs to |
+| `shop_id` | string (UUID) | The shop this product belongs to |
 | `name` | string | Display name of the product |
 | `description` | string \| null | Optional longer description |
 | `barcode` | string \| null | EAN, UPC, or any custom barcode |
@@ -33,13 +33,13 @@ Custom categories are created per shop and let you organize products in a way th
 
 ```bash
 # Create a top-level category
-curl -X POST https://api.mutasib.com/api/v1/shops/42/categories/ \
+curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/categories/ \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Beverages", "parent_id": null }'
 
 # Create a nested sub-category
-curl -X POST https://api.mutasib.com/api/v1/shops/42/categories/ \
+curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/categories/ \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "name": "Cold Drinks", "parent_id": 10 }'
@@ -54,7 +54,7 @@ Mutasib supports two barcode lookup paths: one scoped to your shop, and one that
 Find a product in your shop's catalog by scanning its barcode. This is the endpoint used by the POS screen when a cashier scans an item.
 
 ```bash
-curl https://api.mutasib.com/api/v1/shops/42/products/barcode/6281234567890/ \
+curl https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/barcode/6281234567890/ \
   -H "Authorization: Bearer YOUR_API_TOKEN"
 ```
 

@@ -59,7 +59,7 @@ Creates a new product in the specified shop. Only `name` and `price` are require
 </ParamField>
 
 ```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/products/ \
+curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/ \
   -H "Authorization: Bearer <your_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -102,7 +102,7 @@ Returns a paginated list of products in the shop. Use the query parameters below
 </ParamField>
 
 ```bash
-curl "https://api.mutasib.com/api/v1/shops/42/products/?category_id=7&active_only=true" \
+curl "https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/?category_id=7&active_only=true" \
   -H "Authorization: Bearer <your_token>"
 ```
 
@@ -129,7 +129,7 @@ Performs a full-text search across product names and descriptions within the sho
 </ParamField>
 
 ```bash
-curl "https://api.mutasib.com/api/v1/shops/42/products/search/?q=olive+oil&active_only=true" \
+curl "https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/search/?q=olive+oil&active_only=true" \
   -H "Authorization: Bearer <your_token>"
 ```
 
@@ -146,7 +146,7 @@ Returns `200 OK` with an array of matching [ProductOut](#productout-response-fie
 Retrieves a single product by its ID.
 
 ```bash
-curl https://api.mutasib.com/api/v1/shops/42/products/301/ \
+curl https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/301/ \
   -H "Authorization: Bearer <your_token>"
 ```
 
@@ -203,7 +203,7 @@ Partially updates one or more fields on a product. Only the fields you include a
 </ParamField>
 
 ```bash
-curl -X PATCH https://api.mutasib.com/api/v1/shops/42/products/301/ \
+curl -X PATCH https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/301/ \
   -H "Authorization: Bearer <your_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -225,7 +225,7 @@ Returns `200 OK` with the updated [ProductOut](#productout-response-fields) obje
 Soft-deletes a product by setting `is_active` to `false`. The product is hidden from POS and storefront views but remains in the database and can be reactivated via the [Update product](#update-a-product) endpoint.
 
 ```bash
-curl -X DELETE https://api.mutasib.com/api/v1/shops/42/products/301/ \
+curl -X DELETE https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/301/ \
   -H "Authorization: Bearer <your_token>"
 ```
 
@@ -260,7 +260,7 @@ Uploads a binary image file and attaches it to the product. The request must use
 </ParamField>
 
 ```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/products/301/images/ \
+curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/301/images/ \
   -H "Authorization: Bearer <your_token>" \
   -F "file=@olive_oil.jpg" \
   -F "alt_text=Organic olive oil bottle" \
@@ -280,7 +280,7 @@ Returns `201 Created` with the uploaded image object containing `id`, `image`, `
 Removes a specific image from the product. The image file is deleted from storage.
 
 ```bash
-curl -X DELETE https://api.mutasib.com/api/v1/shops/42/products/301/images/5/ \
+curl -X DELETE https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/301/images/5/ \
   -H "Authorization: Bearer <your_token>"
 ```
 
@@ -294,7 +294,7 @@ Returns `204 No Content` on success.
   Unique numeric identifier for the product.
 </ResponseField>
 
-<ResponseField name="shop_id" type="integer">
+<ResponseField name="shop_id" type="string">
   ID of the shop this product belongs to.
 </ResponseField>
 

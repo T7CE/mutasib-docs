@@ -24,17 +24,17 @@ This guide walks you through the essential steps to go from zero to a working Mu
     Look up your shop by ID to confirm the token works and grab any details you need.
 
     ```bash
-    curl https://api.mutasib.com/api/v1/shops/42 \
+    curl https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41 \
       -H "Authorization: Bearer YOUR_API_TOKEN"
     ```
 
-    Replace `42` with your own shop ID (visible in the dashboard).
+    Replace the UUID with your own shop ID, which you can copy from the shop's settings page in the [Mutasib dashboard](https://mutasib.com/dashboard).
   </Step>
   <Step title="Add a product">
     Add your first product to the shop's catalog.
 
     ```bash
-    curl -X POST https://api.mutasib.com/api/v1/shops/42/products/ \
+    curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/ \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer YOUR_API_TOKEN" \
       -d '{
@@ -47,7 +47,7 @@ This guide walks you through the essential steps to go from zero to a working Mu
     ```json
     {
       "id": 301,
-      "shop_id": 42,
+      "shop_id": "9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41",
       "name": "Organic Apples (1 kg)",
       "price": "12.50",
       "stock": 200,
@@ -63,7 +63,7 @@ This guide walks you through the essential steps to go from zero to a working Mu
     Record a point-of-sale transaction by posting to the shop's sales endpoint. Pass an array of `items`, each with a `product_id` and `quantity`. Mutasib automatically decrements stock and issues a receipt token.
 
     ```bash
-    curl -X POST https://api.mutasib.com/api/v1/shops/42/sales/ \
+    curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/sales/ \
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer YOUR_API_TOKEN" \
       -d '{
@@ -76,7 +76,7 @@ This guide walks you through the essential steps to go from zero to a working Mu
     ```json
     {
       "id": 5001,
-      "shop_id": 42,
+      "shop_id": "9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41",
       "total": "37.50",
       "receipt_token": "rcpt_a1b2c3d4e5f6",
       "items": [

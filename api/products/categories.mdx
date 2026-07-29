@@ -31,7 +31,7 @@ Creates a new category in the specified shop. To create a top-level category, om
 </ParamField>
 
 ```bash
-curl -X POST https://api.mutasib.com/api/v1/shops/42/categories/ \
+curl -X POST https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/categories/ \
   -H "Authorization: Bearer <your_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -54,7 +54,7 @@ Returns `201 Created` with a [CategoryOut](#categoryout-fields) object.
 Returns the full category tree for the shop. Top-level categories are returned as root objects, and each category includes a `children` array containing its subcategories, recursively nested.
 
 ```bash
-curl https://api.mutasib.com/api/v1/shops/42/categories \
+curl https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/categories \
   -H "Authorization: Bearer <your_token>"
 ```
 
@@ -64,7 +64,7 @@ Returns `200 OK` with an array of top-level [CategoryOut](#categoryout-fields) o
 [
   {
     "id": 10,
-    "shop_id": 42,
+    "shop_id": "9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41",
     "name": "Dairy & Eggs",
     "name_ar": "الألبان والبيض",
     "parent_id": null,
@@ -73,7 +73,7 @@ Returns `200 OK` with an array of top-level [CategoryOut](#categoryout-fields) o
     "children": [
       {
         "id": 11,
-        "shop_id": 42,
+        "shop_id": "9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41",
         "name": "Milk",
         "name_ar": "حليب",
         "parent_id": 10,
@@ -113,7 +113,7 @@ Partially updates a category. You can rename it, add or update the Arabic name, 
 </ParamField>
 
 ```bash
-curl -X PATCH https://api.mutasib.com/api/v1/shops/42/categories/10/ \
+curl -X PATCH https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/categories/10/ \
   -H "Authorization: Bearer <your_token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -134,7 +134,7 @@ Returns `200 OK` with the updated [CategoryOut](#categoryout-fields) object.
 Permanently deletes the category. Products currently assigned to this category will have their `category_id` set to `null` — they are not deleted.
 
 ```bash
-curl -X DELETE https://api.mutasib.com/api/v1/shops/42/categories/11/ \
+curl -X DELETE https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/categories/11/ \
   -H "Authorization: Bearer <your_token>"
 ```
 
@@ -152,7 +152,7 @@ Returns `204 No Content` on success.
   Unique numeric identifier for the category.
 </ResponseField>
 
-<ResponseField name="shop_id" type="integer">
+<ResponseField name="shop_id" type="string">
   ID of the shop this category belongs to.
 </ResponseField>
 

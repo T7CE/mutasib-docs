@@ -43,7 +43,7 @@ curl "https://api.mutasib.com/api/v1/public/shops/?category=grocery"
 ### Get a single shop's details
 
 ```bash
-curl https://api.mutasib.com/api/v1/public/shops/42/
+curl https://api.mutasib.com/api/v1/public/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/
 ```
 
 ### List a shop's public products
@@ -52,10 +52,10 @@ Use `search` to match against product names and `category_id` to filter by categ
 
 ```bash
 # All public products
-curl https://api.mutasib.com/api/v1/public/shops/42/products/
+curl https://api.mutasib.com/api/v1/public/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/
 
 # With search and category filter
-curl "https://api.mutasib.com/api/v1/public/shops/42/products/?search=olive+oil&category_id=5"
+curl "https://api.mutasib.com/api/v1/public/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/?search=olive+oil&category_id=5"
 ```
 
 Returns only the products where `is_public: true`.
@@ -84,7 +84,7 @@ For your shop to appear in nearby results, it must have its `latitude` and `long
 Update your shop's coordinates with a `PATCH` request. You only need to do this once (or whenever your shop moves).
 
 ```bash
-curl -X PATCH https://api.mutasib.com/api/v1/shops/42 \
+curl -X PATCH https://api.mutasib.com/api/v1/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41 \
   -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

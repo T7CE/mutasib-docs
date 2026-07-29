@@ -32,7 +32,7 @@ Search across all public products on the platform with optional filters for cate
   Maximum unit price filter.
 </ParamField>
 
-<ParamField query="shop_id" type="integer">
+<ParamField query="shop_id" type="string">
   Restrict results to a single shop.
 </ParamField>
 
@@ -69,7 +69,7 @@ Retrieve the public profile of a single shop by its ID, including name, location
 **`GET /api/v1/public/shops/{shop_id}/`**
 
 ```bash
-curl https://api.mutasib.com/api/v1/public/shops/42/
+curl https://api.mutasib.com/api/v1/public/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/
 ```
 
 Returns a `ShopOut` object with the full public profile of the shop.
@@ -91,7 +91,7 @@ List all public products offered by a specific shop. Supports search and categor
 </ParamField>
 
 ```bash
-curl "https://api.mutasib.com/api/v1/public/shops/42/products/?search=water&category_id=3"
+curl "https://api.mutasib.com/api/v1/public/shops/9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41/products/?search=water&category_id=3"
 ```
 
 Returns an array of `ProductListOut` objects belonging to that shop where `is_public` is `true`.
@@ -125,7 +125,7 @@ curl "https://api.mutasib.com/api/v1/public/shops/nearby/?lat=36.7&lng=3.05&radi
 ```json
 [
   {
-    "id": 42,
+    "id": "9c8f4a12-3b7d-4e2a-a1c5-8f6d0e2b9a41",
     "name": "Al-Nour Supermarket",
     "category": "grocery",
     "address": "12 Rue Didouche Mourad, Algiers",
