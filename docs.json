@@ -1,72 +1,126 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mintlify Starter Kit",
-  "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
-  },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "pages": [
-      {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
-        ]
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
+  "name": "Mutasib",
+  "theme": "luma",
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "https://media.brand.dev/dd8a75c1-5ce0-4430-8e12-c8942440c3f0.svg",
+    "dark": "https://media.brand.dev/dd8a75c1-5ce0-4430-8e12-c8942440c3f0.svg"
+  },
+  "favicon": "https://media.brand.dev/8a15ffb8-3c92-4a12-b9d5-00b9640813c0.png",
+  "colors": {
+    "primary": "#f2903b",
+    "light": "#815434",
+    "dark": "#171d25"
+  },
+  "fonts": {
+    "heading": {
+      "family": "IBM Plex Sans"
+    },
+    "body": {
+      "family": "IBM Plex Sans"
+    }
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "label": "Start Free Trial",
+      "href": "https://www.mutasib.com/register/"
     }
   },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/shops",
+              "concepts/products",
+              "concepts/sales-inventory",
+              "concepts/plans"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/manage-staff",
+              "guides/offline-sync",
+              "guides/ai-features",
+              "guides/public-search"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Auth",
+            "pages": [
+              "api/auth/register",
+              "api/auth/login",
+              "api/auth/two-factor",
+              "api/auth/profile"
+            ]
+          },
+          {
+            "group": "Shops",
+            "pages": [
+              "api/shops/overview",
+              "api/shops/staff-invitations",
+              "api/shops/plans",
+              "api/shops/notifications"
+            ]
+          },
+          {
+            "group": "Products",
+            "pages": [
+              "api/products/overview",
+              "api/products/categories",
+              "api/products/barcode",
+              "api/products/import"
+            ]
+          },
+          {
+            "group": "Sales & Inventory",
+            "pages": [
+              "api/sales/overview",
+              "api/inventory/overview",
+              "api/sales/credit-notes"
+            ]
+          },
+          {
+            "group": "Analytics & AI",
+            "pages": [
+              "api/analytics/overview",
+              "api/ai/overview",
+              "api/reports/overview"
+            ]
+          },
+          {
+            "group": "Public & Misc",
+            "pages": [
+              "api/public/overview",
+              "api/sync/overview",
+              "api/notifications/overview"
+            ]
+          }
+        ]
+      }
     ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "website": "https://mutasib.com"
     }
   }
 }

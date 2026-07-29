@@ -1,0 +1,463 @@
+---
+title: "Products API: Create and Manage Shop Products"
+sidebarTitle: "Products"
+description: "Create, list, update, search, and deactivate products in your Mutasib shop. Includes image upload, batch operations, and public visibility toggling."
+---
+
+The Products API lets you manage every item your shop sells. You can create products with pricing and stock details, upload images, assign them to categories, and control whether they appear in your public storefront. Batch operations make it easy to update prices or toggle visibility across many products at once.
+
+---
+
+## Create a product
+
+<br />
+
+`POST /api/v1/shops/{shop_id}/products/`
+
+Creates a new product in the specified shop. Only `name` and `price` are required — all other fields have sensible defaults.
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  The display name of the product.
+</ParamField>
+
+<ParamField body="price" type="number" required>
+  The selling price of the product. Must be greater than or equal to `0`.
+</ParamField>
+
+<ParamField body="description" type="string" default='""'>
+  A detailed description of the product shown to customers.
+</ParamField>
+
+<ParamField body="barcode" type="string" default='""'>
+  The product's barcode (EAN, UPC, or custom). Used for POS scanning and barcode lookup.
+</ParamField>
+
+<ParamField body="cost" type="number" default="0">
+  The purchase or production cost of the product. Used for profit margin calculations.
+</ParamField>
+
+<ParamField body="stock" type="integer" default="0">
+  Initial stock quantity.
+</ParamField>
+
+<ParamField body="low_stock_threshold" type="integer" default="10">
+  The stock level at which a low-stock alert is triggered.
+</ParamField>
+
+<ParamField body="unit" type="string" default='"piece"'>
+  Unit of measurement (e.g., `"piece"`, `"kg"`, `"litre"`).
+</ParamField>
+
+<ParamField body="category_id" type="integer">
+  ID of the category to assign this product to. Must belong to the same shop. Optional.
+</ParamField>
+
+<ParamField body="is_public" type="boolean" default="false">
+  Whether the product is visible on the public storefront. Requires the shop's `is_visible_in_search` to be `true`.
+</ParamField>
+
+<ParamField body="image_url" type="string" default='""'>
+  A URL pointing to the product's primary image. To upload binary files directly, use the [Upload product image](#upload-a-product-image) endpoint after creation.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/products/ \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Organic Olive Oil 500ml",
+    "price": 34.99,
+    "cost": 18.50,
+    "barcode": "6281234567890",
+    "stock": 120,
+    "low_stock_threshold": 20,
+    "unit": "bottle",
+    "category_id": 7,
+    "description": "Cold-pressed extra virgin olive oil from local farms.",
+    "is_public": true
+  }'
+```
+
+Returns `201 Created` with a [ProductOut](#productout-response-fields) object.
+
+---
+
+## List products
+
+<br />
+
+`GET /api/v1/shops/{shop_id}/products/`
+
+Returns a paginated list of products in the shop. Use the query parameters below to filter by category, search term, or active status.
+
+### Query parameters
+
+<ParamField query="category_id" type="integer">
+  Filter products by a specific category ID.
+</ParamField>
+
+<ParamField query="search" type="string">
+  Filter products whose name or barcode contains this string (case-insensitive).
+</ParamField>
+
+<ParamField query="active_only" type="boolean">
+  When `true`, returns only products with `is_active: true`. Defaults to `false`.
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/shops/42/products/?category_id=7&active_only=true" \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `200 OK` with an array of [ProductOut](#productout-response-fields) objects.
+
+---
+
+## Search products
+
+<br />
+
+`GET /api/v1/shops/{shop_id}/products/search/`
+
+Performs a full-text search across product names and descriptions within the shop. This endpoint is optimized for quick lookups from POS or inventory management screens.
+
+### Query parameters
+
+<ParamField query="q" type="string" required>
+  The search query string.
+</ParamField>
+
+<ParamField query="active_only" type="boolean">
+  When `true`, limits results to active products only. Defaults to `false`.
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/shops/42/products/search/?q=olive+oil&active_only=true" \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `200 OK` with an array of matching [ProductOut](#productout-response-fields) objects.
+
+---
+
+## Get a product
+
+<br />
+
+`GET /api/v1/shops/{shop_id}/products/{product_id}/`
+
+Retrieves a single product by its ID.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/products/301/ \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `200 OK` with a [ProductOut](#productout-response-fields) object, or `404 Not Found` if the product does not exist in this shop.
+
+---
+
+## Update a product
+
+<br />
+
+`PATCH /api/v1/shops/{shop_id}/products/{product_id}/`
+
+Partially updates one or more fields on a product. Only the fields you include are changed.
+
+<ParamField body="name" type="string">
+  Updated product name.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated product description.
+</ParamField>
+
+<ParamField body="barcode" type="string">
+  Updated barcode value.
+</ParamField>
+
+<ParamField body="price" type="number">
+  Updated selling price.
+</ParamField>
+
+<ParamField body="cost" type="number">
+  Updated purchase cost.
+</ParamField>
+
+<ParamField body="stock" type="integer">
+  Updated stock quantity. This sets the absolute stock level — it does not add or subtract.
+</ParamField>
+
+<ParamField body="low_stock_threshold" type="integer">
+  Updated low-stock alert threshold.
+</ParamField>
+
+<ParamField body="unit" type="string">
+  Updated unit of measurement.
+</ParamField>
+
+<ParamField body="category_id" type="integer">
+  Updated category assignment.
+</ParamField>
+
+<ParamField body="is_active" type="boolean">
+  Set to `false` to deactivate the product without deleting it.
+</ParamField>
+
+<ParamField body="is_public" type="boolean">
+  Toggle public storefront visibility.
+</ParamField>
+
+```bash
+curl -X PATCH https://api.mutasib.com/api/v1/shops/42/products/301/ \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "price": 29.99,
+    "stock": 85
+  }'
+```
+
+Returns `200 OK` with the updated [ProductOut](#productout-response-fields) object.
+
+---
+
+## Deactivate a product
+
+<br />
+
+`DELETE /api/v1/shops/{shop_id}/products/{product_id}/`
+
+Soft-deletes a product by setting `is_active` to `false`. The product is hidden from POS and storefront views but remains in the database and can be reactivated via the [Update product](#update-a-product) endpoint.
+
+```bash
+curl -X DELETE https://api.mutasib.com/api/v1/shops/42/products/301/ \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `204 No Content` on success.
+
+<Note>
+  This endpoint performs a soft delete. To permanently remove a product, contact Mutasib support. To reactivate a deactivated product, send `PATCH /api/v1/shops/{shop_id}/products/{product_id}/` with `{ "is_active": true }`.
+</Note>
+
+---
+
+## Upload a product image
+
+<br />
+
+`POST /api/v1/shops/{shop_id}/products/{product_id}/images/`
+
+Uploads a binary image file and attaches it to the product. The request must use `multipart/form-data` encoding. A product can have multiple images; use `sort_order` to control display order.
+
+### Form fields
+
+<ParamField body="file" type="file" required>
+  The image file to upload. Accepted formats: JPEG, PNG, WebP.
+</ParamField>
+
+<ParamField body="alt_text" type="string">
+  Descriptive alt text for accessibility and SEO.
+</ParamField>
+
+<ParamField body="sort_order" type="integer">
+  Display order for this image. Lower numbers appear first. Defaults to `0`.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/products/301/images/ \
+  -H "Authorization: Bearer <your_token>" \
+  -F "file=@olive_oil.jpg" \
+  -F "alt_text=Organic olive oil bottle" \
+  -F "sort_order=0"
+```
+
+Returns `201 Created` with the uploaded image object containing `id`, `url`, `alt_text`, and `sort_order`.
+
+---
+
+## Delete a product image
+
+<br />
+
+`DELETE /api/v1/shops/{shop_id}/products/{product_id}/images/{image_id}/`
+
+Removes a specific image from the product. The image file is deleted from storage.
+
+```bash
+curl -X DELETE https://api.mutasib.com/api/v1/shops/42/products/301/images/5/ \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `204 No Content` on success.
+
+---
+
+## Toggle public visibility
+
+<br />
+
+`POST /api/v1/shops/{shop_id}/products/{product_id}/toggle-public`
+
+Flips the `is_public` flag on the product. If the product is currently public, it becomes private; if it is private, it becomes public. This is a convenience shortcut for the PATCH update.
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/products/301/toggle-public \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `200 OK` with the updated [ProductOut](#productout-response-fields) object reflecting the new `is_public` value.
+
+---
+
+## Batch price update
+
+<br />
+
+`POST /api/v1/shops/{shop_id}/products/batch-price`
+
+Sets the same price on multiple products in a single request. Useful for promotional pricing or bulk cost adjustments.
+
+### Request body
+
+<ParamField body="product_ids" type="integer[]" required>
+  Array of product IDs to update.
+</ParamField>
+
+<ParamField body="price" type="number" required>
+  The new price to apply to all specified products.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/products/batch-price \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product_ids": [301, 302, 305],
+    "price": 24.99
+  }'
+```
+
+Returns `200 OK` with a summary of how many products were updated.
+
+---
+
+## Batch visibility update
+
+<br />
+
+`POST /api/v1/shops/{shop_id}/products/batch-visibility`
+
+Sets the `is_public` flag to the same value for multiple products at once.
+
+### Request body
+
+<ParamField body="product_ids" type="integer[]" required>
+  Array of product IDs to update.
+</ParamField>
+
+<ParamField body="is_public" type="boolean" required>
+  The new public visibility value to apply to all specified products.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/products/batch-visibility \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "product_ids": [301, 302, 305],
+    "is_public": true
+  }'
+```
+
+Returns `200 OK` with a summary of how many products were updated.
+
+---
+
+## ProductOut response fields
+
+<ResponseField name="id" type="integer">
+  Unique numeric identifier for the product.
+</ResponseField>
+
+<ResponseField name="shop_id" type="integer">
+  ID of the shop this product belongs to.
+</ResponseField>
+
+<ResponseField name="category_id" type="integer | null">
+  ID of the assigned category, or `null` if uncategorized.
+</ResponseField>
+
+<ResponseField name="category_name" type="string | null">
+  Display name of the assigned category, or `null` if uncategorized.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Display name of the product.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Product description.
+</ResponseField>
+
+<ResponseField name="barcode" type="string">
+  The product's barcode string.
+</ResponseField>
+
+<ResponseField name="price" type="number">
+  Current selling price.
+</ResponseField>
+
+<ResponseField name="cost" type="number">
+  Purchase or production cost used for margin calculations.
+</ResponseField>
+
+<ResponseField name="stock" type="integer">
+  Current inventory stock level.
+</ResponseField>
+
+<ResponseField name="low_stock_threshold" type="integer">
+  The stock level at which low-stock alerts fire.
+</ResponseField>
+
+<ResponseField name="unit" type="string">
+  Unit of measurement (e.g., `"piece"`, `"kg"`, `"litre"`).
+</ResponseField>
+
+<ResponseField name="is_active" type="boolean">
+  Whether the product is active and visible in POS and inventory views.
+</ResponseField>
+
+<ResponseField name="is_public" type="boolean">
+  Whether the product is visible on the public storefront.
+</ResponseField>
+
+<ResponseField name="images" type="array">
+  List of image objects attached to this product.
+  <Expandable title="properties">
+    <ResponseField name="id" type="integer">
+      Unique image ID.
+    </ResponseField>
+    <ResponseField name="url" type="string">
+      Public URL of the uploaded image.
+    </ResponseField>
+    <ResponseField name="alt_text" type="string">
+      Descriptive alt text for the image.
+    </ResponseField>
+    <ResponseField name="sort_order" type="integer">
+      Display order; lower numbers appear first.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the product was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of the most recent update.
+</ResponseField>

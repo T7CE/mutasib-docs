@@ -1,0 +1,405 @@
+---
+title: "Authenticate with the Mutasib API"
+sidebarTitle: "Authentication"
+description: "Mutasib uses JWT Bearer tokens for API auth. Learn how to log in, refresh tokens, sign in with Google, and protect accounts with TOTP or email 2FA."
+---
+
+Mutasib secures every API request with **JSON Web Tokens (JWT)**. When you authenticate — whether through email/password, Google OAuth, or two-factor login — the API returns a short-lived **access token** and a longer-lived **refresh token**. You attach the access token to every protected request as an `Authorization: Bearer` header. When it expires, you use the refresh token to silently obtain a new pair without requiring the user to log in again. This page covers every authentication flow the API supports.
+
+## Getting a token
+
+Call `POST /api/v1/auth/login` with the account's email address and password. On success you receive both tokens immediately.
+
+### Request fields
+
+<ParamField body="email" type="string" required>
+  The email address used to register the account.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The account password.
+</ParamField>
+
+### Example
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST https://api.mutasib.com/api/v1/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{
+      "email": "you@example.com",
+      "password": "Sup3rS3cure!"
+    }'
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.post(
+      "https://api.mutasib.com/api/v1/auth/login",
+      json={
+          "email": "you@example.com",
+          "password": "Sup3rS3cure!",
+      },
+  )
+  print(response.json())
+  ```
+
+  ```js JavaScript
+  const response = await fetch("https://api.mutasib.com/api/v1/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: "you@example.com",
+      password: "Sup3rS3cure!",
+    }),
+  });
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+### Response fields
+
+<ResponseField name="access" type="string">
+  Short-lived JWT access token. Include this in the `Authorization` header of every protected request.
+</ResponseField>
+
+<ResponseField name="refresh" type="string">
+  Longer-lived JWT refresh token. Use this to obtain a new access token when the current one expires.
+</ResponseField>
+
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+<Warning>
+  If the account has two-factor authentication enabled, the API returns `202 Accepted` with an empty body instead of tokens. You must complete the 2FA challenge before tokens are issued. See the [Two-factor authentication](#two-factor-authentication) section below.
+</Warning>
+
+## Using your token
+
+Pass the access token in the `Authorization` header on every request that requires authentication. The value must be prefixed with `Bearer ` (note the space).
+
+```bash
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+### Example — fetch the current user
+
+<CodeGroup>
+  ```bash curl
+  curl https://api.mutasib.com/api/v1/auth/me \
+    -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.get(
+      "https://api.mutasib.com/api/v1/auth/me",
+      headers={"Authorization": "Bearer YOUR_ACCESS_TOKEN"},
+  )
+  print(response.json())
+  ```
+
+  ```js JavaScript
+  const response = await fetch("https://api.mutasib.com/api/v1/auth/me", {
+    headers: { Authorization: "Bearer YOUR_ACCESS_TOKEN" },
+  });
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+```json
+{
+  "id": "usr_01j9xkz3p4qr5t6uvw7yz8xyz",
+  "email": "you@example.com",
+  "username": "yourname",
+  "role": "shopowner",
+  "is_active": true,
+  "is_email_verified": true,
+  "created_at": "2024-11-01T09:00:00Z",
+  "updated_at": "2024-11-01T09:00:00Z"
+}
+```
+
+## Refreshing tokens
+
+Access tokens are intentionally short-lived. When one expires, rather than prompting the user to log in again, exchange the refresh token for a new token pair by calling `POST /api/v1/auth/refresh`. Both tokens in the pair are rotated on every refresh — discard the old ones after this call.
+
+<ParamField body="refresh" type="string" required>
+  The refresh token returned from your most recent login or refresh call.
+</ParamField>
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST https://api.mutasib.com/api/v1/auth/refresh \
+    -H "Content-Type: application/json" \
+    -d '{"refresh": "YOUR_REFRESH_TOKEN"}'
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.post(
+      "https://api.mutasib.com/api/v1/auth/refresh",
+      json={"refresh": "YOUR_REFRESH_TOKEN"},
+  )
+  tokens = response.json()
+  # Replace stored tokens with the new pair
+  access_token = tokens["access"]
+  refresh_token = tokens["refresh"]
+  ```
+
+  ```js JavaScript
+  const response = await fetch("https://api.mutasib.com/api/v1/auth/refresh", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh: "YOUR_REFRESH_TOKEN" }),
+  });
+  const { access, refresh } = await response.json();
+  // Replace stored tokens with the new pair
+  ```
+</CodeGroup>
+
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+<Note>
+  If the refresh token itself has expired (or has been revoked), the API returns `401 Unauthorized`. At that point the user must log in again with their credentials.
+</Note>
+
+## Google OAuth
+
+Users can sign in — or create a new account — using their Google identity. Your client application handles the Google OAuth consent flow and obtains a Google access token; you then pass that token to Mutasib.
+
+To get a Google access token in your app, use [Google's OAuth 2.0 flow](https://developers.google.com/identity/protocols/oauth2) with the `email` and `profile` scopes. Once the user grants consent, Google returns a short-lived access token you forward to Mutasib.
+
+<ParamField query="access_token" type="string" required>
+  The Google OAuth 2.0 access token returned to your app after the user completes Google's consent screen.
+</ParamField>
+
+<ParamField query="role" type="string">
+  Account role to assign if this is a first-time sign-in (no existing Mutasib account for this Google identity). Accepted values: `shopowner`, `cashier`. Defaults to `shopowner`.
+</ParamField>
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST \
+    "https://api.mutasib.com/api/v1/auth/oauth/google?access_token=GOOGLE_ACCESS_TOKEN&role=shopowner"
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.post(
+      "https://api.mutasib.com/api/v1/auth/oauth/google",
+      params={
+          "access_token": "GOOGLE_ACCESS_TOKEN",
+          "role": "shopowner",
+      },
+  )
+  print(response.json())
+  ```
+
+  ```js JavaScript
+  const params = new URLSearchParams({
+    access_token: "GOOGLE_ACCESS_TOKEN",
+    role: "shopowner",
+  });
+  const response = await fetch(
+    `https://api.mutasib.com/api/v1/auth/oauth/google?${params}`,
+    { method: "POST" }
+  );
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+```json
+{
+  "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+Mutasib verifies the Google token with Google's servers, creates an account if none exists for that Google identity, and returns a standard JWT pair. Subsequent logins via Google with the same identity are linked to the same Mutasib account automatically.
+
+## Two-factor authentication
+
+Two-factor authentication adds a second verification step on top of your password. Mutasib supports two 2FA methods: **email-based one-time codes** and **TOTP** (time-based one-time passwords compatible with apps like Google Authenticator and Authy).
+
+### Email 2FA
+
+When a login attempt comes from an account with email 2FA active, `POST /api/v1/auth/login` returns `202 Accepted` instead of tokens. Mutasib sends a one-time code to the account's registered email address. Submit that code to complete the login.
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST https://api.mutasib.com/api/v1/auth/login-email-2fa \
+    -H "Content-Type: application/json" \
+    -d '{
+      "email": "you@example.com",
+      "code": "847291"
+    }'
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.post(
+      "https://api.mutasib.com/api/v1/auth/login-email-2fa",
+      json={
+          "email": "you@example.com",
+          "code": "847291",
+      },
+  )
+  print(response.json())
+  ```
+
+  ```js JavaScript
+  const response = await fetch(
+    "https://api.mutasib.com/api/v1/auth/login-email-2fa",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "you@example.com", code: "847291" }),
+    }
+  );
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+On success the API returns the standard `{access, refresh}` token pair.
+
+### TOTP 2FA
+
+TOTP generates time-based codes in an authenticator app. There are three stages: **setup**, **enable**, and **login**.
+
+**Set up TOTP** — call `GET /api/v1/auth/2fa/setup` with a valid Bearer token. The API returns a `provisioning_uri` you render as a QR code for the user to scan with their authenticator app.
+
+```bash
+curl https://api.mutasib.com/api/v1/auth/2fa/setup \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+```json
+{
+  "provisioning_uri": "otpauth://totp/Mutasib:you%40example.com?secret=BASE32SECRET&issuer=Mutasib",
+  "secret": "BASE32SECRET"
+}
+```
+
+**Enable TOTP** — after scanning the QR code, the user reads their first 6-digit code from the app and posts it to verify that setup succeeded. This activates 2FA on the account.
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST https://api.mutasib.com/api/v1/auth/2fa/verify \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+    -d '{"code": "123456"}'
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.post(
+      "https://api.mutasib.com/api/v1/auth/2fa/verify",
+      json={"code": "123456"},
+      headers={"Authorization": "Bearer YOUR_ACCESS_TOKEN"},
+  )
+  print(response.json())
+  ```
+
+  ```js JavaScript
+  const response = await fetch(
+    "https://api.mutasib.com/api/v1/auth/2fa/verify",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer YOUR_ACCESS_TOKEN",
+      },
+      body: JSON.stringify({ code: "123456" }),
+    }
+  );
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+**Log in with TOTP active** — once TOTP is enabled, use the dedicated login endpoint and include the current TOTP code alongside your credentials.
+
+<CodeGroup>
+  ```bash curl
+  curl -X POST https://api.mutasib.com/api/v1/auth/login-2fa \
+    -H "Content-Type: application/json" \
+    -d '{
+      "email": "you@example.com",
+      "password": "Sup3rS3cure!",
+      "code": "123456"
+    }'
+  ```
+
+  ```python Python
+  import requests
+
+  response = requests.post(
+      "https://api.mutasib.com/api/v1/auth/login-2fa",
+      json={
+          "email": "you@example.com",
+          "password": "Sup3rS3cure!",
+          "code": "123456",
+      },
+  )
+  print(response.json())
+  ```
+
+  ```js JavaScript
+  const response = await fetch(
+    "https://api.mutasib.com/api/v1/auth/login-2fa",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "you@example.com",
+        password: "Sup3rS3cure!",
+        code: "123456",
+      }),
+    }
+  );
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+On success the API returns the standard `{access, refresh}` token pair.
+
+<Accordion title="Which 2FA method should I use?">
+  **Email 2FA** is simpler to implement and requires no extra app installation. It is a good default for lower-risk accounts or users who are not comfortable with authenticator apps. Codes arrive by email and expire quickly.
+
+  **TOTP** is stronger because codes are generated offline on the user's device and never travel over the network during normal use. Use TOTP for shop owner accounts or any account with financial or administrative privileges. Major authenticator apps — Google Authenticator, Authy, 1Password, Bitwarden — all support the standard TOTP `otpauth://` URI that Mutasib returns.
+</Accordion>
+
+## HTTP error codes
+
+When authentication fails, the API returns a standard HTTP error code. The table below lists the codes you will encounter most often and what to do about each.
+
+| Code | Name | Meaning | What to do |
+|---|---|---|---|
+| `400` | Bad Request | The request body is malformed or a required field is missing (e.g. `email` not a valid email address). | Check the `detail` field in the response body for the specific validation error and fix your request payload. |
+| `401` | Unauthorized | No token was provided, the token is invalid, or the token has expired. | Include a valid `Authorization: Bearer` header. If the access token has expired, refresh it with `POST /api/v1/auth/refresh`. |
+| `403` | Forbidden | The request was authenticated, but the account does not have permission to perform this action (e.g. a `cashier` attempting a `shopowner`-only operation). | Verify that the account's `role` has the required permissions for the endpoint you are calling. |
+
+<Tip>
+  Store your **refresh token** in a secure, persistent location — for example, an encrypted keystore, a `httpOnly` cookie, or a secrets manager. Never embed tokens in URLs, log files, or client-side source code. If you suspect a refresh token has been compromised, log the user out and force a fresh login to issue a clean token pair.
+</Tip>

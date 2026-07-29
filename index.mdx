@@ -1,20 +1,63 @@
 ---
-title: "Introduction"
-description: "Welcome to your project"
+title: "Mutasib API Documentation"
+sidebarTitle: "Home"
+description: "Mutasib is an all-in-one shop management platform. Use the API to manage shops, products, sales, inventory, and AI-powered analytics."
 ---
 
-Write a short description of your product here. What it does, who it's for, and what they can accomplish with it.
+Mutasib gives shop owners and developers a complete REST API for building on top of the Mutasib platform — from registering shops and managing products to processing sales, tracking inventory, and querying AI-powered demand forecasts. Every resource in the Mutasib dashboard is accessible through this API.
 
-<Tip>
-  Ready to make this your own? Start by editing this page. Update your `docs.json` file to customize your site. Then fill out the [Quickstart](/quickstart) page.
-</Tip>
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Make your first API call in under 5 minutes
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Get a JWT token and authenticate every request
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/auth/register">
+    Full endpoint reference with request & response examples
+  </Card>
+  <Card title="Core Concepts" icon="book-open" href="/concepts/shops">
+    Understand shops, products, plans, and the data model
+  </Card>
+</CardGroup>
 
-<Card title="Quickstart" icon="rocket" href="/quickstart">
-  This card links to the quickstart page in your project.
-</Card>
-<Card title="Components" icon="puzzle-piece" href="https://mintlify.com/docs/components">
-  Add cards, callouts, steps, tabs, and more to design and structure your pages.
-</Card>
-<Card title="Settings" icon="gear" href="https://mintlify.com/docs/organize/settings">
-  Set your site name, branding, and navigation in the `docs.json` file.
-</Card>
+## What you can build
+
+<CardGroup cols={3}>
+  <Card title="Point of Sale" icon="barcode" href="/api/sales/overview">
+    Create sales, scan barcodes, and issue digital receipts
+  </Card>
+  <Card title="Inventory" icon="boxes-stacked" href="/api/inventory/overview">
+    Track stock levels, adjust inventory, and catch low-stock alerts
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/api/analytics/overview">
+    Pull revenue trends, top products, and category breakdowns
+  </Card>
+  <Card title="AI Features" icon="brain" href="/api/ai/overview">
+    Demand forecasting, reorder suggestions, and M.AI chat
+  </Card>
+  <Card title="Public Search" icon="magnifying-glass" href="/api/public/overview">
+    Let customers discover your shop and products
+  </Card>
+  <Card title="Offline Sync" icon="rotate" href="/api/sync/overview">
+    Sync batches of offline operations when connectivity returns
+  </Card>
+</CardGroup>
+
+## Getting started in 3 steps
+
+<Steps>
+  <Step title="Create an account">
+    Register at [mutasib.com/register](https://www.mutasib.com/register/) or call `POST /api/v1/auth/register`. Choose the **shopowner** role.
+  </Step>
+  <Step title="Get your JWT token">
+    Log in with `POST /api/v1/auth/login`. The response contains `access` and `refresh` tokens. Pass `Authorization: Bearer <access>` on every authenticated request.
+  </Step>
+  <Step title="Create your shop">
+    Call `POST /api/v1/shops/` with your shop name, address, and category. You'll receive a `shop_id` you'll use throughout the API.
+  </Step>
+</Steps>
+
+<Note>
+All API endpoints are prefixed with `https://api.mutasib.com`. JWT tokens expire periodically — use `POST /api/v1/auth/refresh` with your `refresh` token to get a new `access` token without logging in again.
+</Note>

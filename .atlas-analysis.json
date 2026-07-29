@@ -1,0 +1,146 @@
+{
+  "projectType": "api-service",
+  "projectName": "Mutasib",
+  "projectDescription": "Mutasib is an all-in-one shop management SaaS platform providing POS, inventory tracking, analytics, AI assistance, and a public API for building integrations with local retail shops.",
+  "theme": "luma",
+  "primaryColor": "#f2903b",
+  "lightColor": "#815434",
+  "darkColor": "#171d25",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/shops",
+              "concepts/products",
+              "concepts/sales-inventory",
+              "concepts/plans"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/manage-staff",
+              "guides/offline-sync",
+              "guides/ai-features",
+              "guides/public-search"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Auth",
+            "pages": [
+              "api/auth/register",
+              "api/auth/login",
+              "api/auth/two-factor",
+              "api/auth/profile"
+            ]
+          },
+          {
+            "group": "Shops",
+            "pages": [
+              "api/shops/overview",
+              "api/shops/staff-invitations",
+              "api/shops/plans",
+              "api/shops/notifications"
+            ]
+          },
+          {
+            "group": "Products",
+            "pages": [
+              "api/products/overview",
+              "api/products/categories",
+              "api/products/barcode",
+              "api/products/import"
+            ]
+          },
+          {
+            "group": "Sales & Inventory",
+            "pages": [
+              "api/sales/overview",
+              "api/inventory/overview",
+              "api/sales/credit-notes"
+            ]
+          },
+          {
+            "group": "Analytics & AI",
+            "pages": [
+              "api/analytics/overview",
+              "api/ai/overview",
+              "api/reports/overview"
+            ]
+          },
+          {
+            "group": "Public & Misc",
+            "pages": [
+              "api/public/overview",
+              "api/sync/overview",
+              "api/notifications/overview"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Barcode-based Point of Sale (POS) with digital and printed receipts",
+    "Real-time cloud inventory tracking with low-stock alerts",
+    "M.AI conversational assistant (Arabic & English) for shop queries",
+    "AI-powered demand forecasting and reorder suggestions",
+    "Staff invitation and multi-cashier management",
+    "Customer credit notes and debt tracking",
+    "Analytics dashboard: revenue trends, top products, category breakdowns",
+    "Offline-first sync for uninterrupted selling",
+    "Public product and shop discovery search",
+    "OpenFood barcode database integration for product import",
+    "Subscription plans: Free, Starter ($7/mo), Pro ($19/mo)"
+  ],
+  "publicApiSurface": [
+    "POST /api/v1/auth/register",
+    "POST /api/v1/auth/login",
+    "POST /api/v1/auth/login-2fa",
+    "POST /api/v1/auth/oauth/google",
+    "GET  /api/v1/auth/me",
+    "POST /api/v1/shops/",
+    "GET  /api/v1/shops/mine",
+    "POST /api/v1/shops/{shop_id}/invitations",
+    "POST /api/v1/shops/invite/accept",
+    "GET  /api/v1/shops/{shop_id}/plan",
+    "POST /api/v1/shops/{shop_id}/plan/trial",
+    "POST /api/v1/shops/{shop_id}/categories/",
+    "POST /api/v1/shops/{shop_id}/products/",
+    "GET  /api/v1/shops/{shop_id}/products/",
+    "GET  /api/v1/shops/{shop_id}/products/barcode/{barcode}/",
+    "POST /api/v1/shops/import",
+    "POST /api/v1/shops/{shop_id}/sales/",
+    "GET  /api/v1/shops/{shop_id}/sales/",
+    "GET  /api/v1/shops/{shop_id}/inventory/",
+    "PATCH /api/v1/shops/{shop_id}/inventory/{product_id}/",
+    "GET  /api/v1/shops/{shop_id}/analytics",
+    "POST /api/v1/shops/{shop_id}/ai/mutasib",
+    "POST /api/v1/shops/{shop_id}/ai/predict",
+    "POST /api/v1/shops/{shop_id}/ai/reorder",
+    "GET  /api/v1/shops/{shop_id}/reports/sales",
+    "POST /api/v1/credit-notes/{shop_id}/",
+    "GET  /api/v1/public/search/",
+    "GET  /api/v1/public/shops/nearby/",
+    "GET  /api/v1/public/receipt/{token}",
+    "POST /api/v1/sync/sync/",
+    "POST /api/v1/payments/checkout"
+  ]
+}

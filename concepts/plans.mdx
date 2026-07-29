@@ -1,0 +1,167 @@
+---
+title: "Mutasib Plans: Free, Starter, and Pro"
+sidebarTitle: "Plans"
+description: "Mutasib offers three subscription tiers — Free, Starter, and Pro — with different feature limits and pricing. Start free and upgrade via API when you're ready to grow."
+---
+
+Mutasib is designed to grow with your business. You can start on the Free plan at no cost, try Starter features with a 14-day trial (no credit card required), and upgrade to Pro when you need the full feature set. Every shop has its own plan, so if you manage multiple shops you can mix plans across them.
+
+## Plan Comparison
+
+The table below gives you a side-by-side view of what each plan includes.
+
+<Tabs>
+  <Tab title="Free — $0/mo">
+    The Free plan gives you everything you need to get started: a shop, a POS, and basic product management. There are no time limits — it's free forever.
+
+    | Feature | Free |
+    |---|---|
+    | **Price** | $0 / month |
+    | **Cashier accounts** | 1 |
+    | **Sales history** | 30 days |
+    | **Public products** | 0 |
+    | **Analytics** | — |
+    | **AI features** | — |
+    | **Customer credit system** | — |
+    | **Supplier management** | — |
+    | **Export PDF / CSV** | — |
+    | **Featured in search** | — |
+    | **Support** | Basic |
+  </Tab>
+  <Tab title="Starter — $7/mo">
+    Starter unlocks analytics, more cashier seats, unlimited sales history, and the ability to show up to 100 products in public customer search.
+
+    | Feature | Starter |
+    |---|---|
+    | **Price** | $7 / month |
+    | **Cashier accounts** | 2 |
+    | **Sales history** | Unlimited |
+    | **Public products** | 100 |
+    | **Analytics** | ✓ |
+    | **AI features** | Sales predictions |
+    | **Customer credit system** | — |
+    | **Supplier management** | — |
+    | **Export PDF / CSV** | — |
+    | **Featured in search** | — |
+    | **Support** | Standard |
+  </Tab>
+  <Tab title="Pro — $19/mo">
+    Pro is the complete package: full AI capabilities including M.AI and smart reorder suggestions, customer credit tracking, supplier management, data exports, and priority placement in search.
+
+    | Feature | Pro |
+    |---|---|
+    | **Price** | $19 / month |
+    | **Cashier accounts** | 5 |
+    | **Sales history** | Unlimited |
+    | **Public products** | 1,000 |
+    | **Analytics** | ✓ |
+    | **AI features** | Full M.AI + reorder suggestions |
+    | **Customer credit system** | ✓ |
+    | **Supplier management** | ✓ |
+    | **Export PDF / CSV** | ✓ |
+    | **Featured in search** | ✓ |
+    | **Support** | Priority |
+  </Tab>
+</Tabs>
+
+## Starting a Free Trial
+
+Before committing to a paid plan, you can activate a 14-day Starter trial on any shop. No credit card is required — just send the request and the trial starts immediately.
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/plan/trial \
+  -H "Authorization: Bearer <token>"
+```
+
+The response includes a `plan_expires_at` timestamp indicating when the trial ends. If you don't upgrade before the trial expires, the shop automatically reverts to the Free plan.
+
+<Note>
+  Each shop is eligible for one free trial. You cannot start a second trial on the same shop after the first one has ended.
+</Note>
+
+## Upgrading Your Plan
+
+Mutasib uses [Lemon Squeezy](https://lemonsqueezy.com) as its payment processor. To upgrade, generate a secure checkout URL and redirect your user to complete payment.
+
+<Steps>
+  <Step title="Generate a checkout URL">
+    Call the payments endpoint with your shop ID and the target plan name (`starter` or `pro`).
+
+    ```bash
+    curl -X POST \
+      "https://api.mutasib.com/api/v1/payments/checkout?shop_id={shop_id}&plan=pro" \
+      -H "Authorization: Bearer <token>"
+    ```
+
+    The response body contains a `checkout_url` field.
+
+    ```json
+    {
+      "checkout_url": "https://mutasib.lemonsqueezy.com/checkout/..."
+    }
+    ```
+  </Step>
+  <Step title="Redirect the user">
+    Redirect your user's browser — or open a webview in your mobile app — to the returned `checkout_url`. Lemon Squeezy handles the payment form, card processing, and receipt delivery.
+  </Step>
+  <Step title="Plan activates automatically">
+    Once payment is confirmed, Lemon Squeezy sends a webhook to Mutasib. Your shop's plan is updated automatically — no further action required on your end.
+  </Step>
+</Steps>
+
+<Note>
+  All payments are processed and managed by **Lemon Squeezy**, who acts as the Merchant of Record. Tax calculations, VAT compliance, and payment receipts are handled entirely by Lemon Squeezy on your behalf.
+</Note>
+
+## Cancelling Your Plan
+
+You can cancel a paid plan at any time. Cancellation does not cut off access immediately — your shop retains all paid plan features until the current billing period ends, as indicated by `plan_expires_at`. After that date, the shop is automatically downgraded to Free.
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/plan/cancel \
+  -H "Authorization: Bearer <token>"
+```
+
+<Warning>
+  After downgrading to Free, features like analytics, AI, and credit notes become inaccessible. Your data is preserved — if you re-upgrade later, everything will still be there.
+</Warning>
+
+## Checking the Current Plan
+
+To inspect a shop's active plan, feature flags, and expiry date, use the plan endpoint:
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/{shop_id}/plan \
+  -H "Authorization: Bearer <token>"
+```
+
+A typical response looks like this:
+
+```json
+{
+  "plan": "pro",
+  "plan_features": {
+    "max_cashiers": 5,
+    "max_public_products": 1000,
+    "analytics": true,
+    "ai_predictions": true,
+    "full_ai": true,
+    "credit_system": true,
+    "supplier_management": true,
+    "export": true,
+    "featured_in_search": true
+  },
+  "plan_expires_at": "2024-03-01T00:00:00Z"
+}
+```
+
+Use the `plan_features` object in your own application to gate UI features client-side without hard-coding plan logic — if Mutasib updates what a plan includes, your app picks up the change automatically.
+
+## Endpoint Summary
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/shops/{shop_id}/plan` | Get current plan, features, and expiry |
+| `POST` | `/api/v1/shops/{shop_id}/plan/trial` | Start a 14-day Starter trial |
+| `POST` | `/api/v1/shops/{shop_id}/plan/cancel` | Cancel the current paid plan |
+| `POST` | `/api/v1/payments/checkout` | Generate a Lemon Squeezy checkout URL |

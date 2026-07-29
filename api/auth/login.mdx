@@ -1,0 +1,259 @@
+---
+title: "Log In and Get JWT Tokens from Mutasib API"
+sidebarTitle: "Login"
+description: "POST /api/v1/auth/login — authenticate and receive access+refresh JWT tokens. Supports rate limiting and 2FA."
+---
+
+Logging in authenticates your credentials and returns a JWT access token together with a refresh token. Include the access token in the `Authorization: Bearer <token>` header of every subsequent API request. Access tokens are short-lived; use the refresh token to obtain a new pair without asking the user to re-enter their password.
+
+---
+
+## Standard Login
+
+### Endpoint
+
+```
+POST /api/v1/auth/login
+```
+
+### Request Body
+
+<ParamField body="email" type="string" required>
+  The email address associated with your Mutasib account.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  Your account password.
+</ParamField>
+
+### Example Request
+
+<CodeGroup>
+
+```bash curl
+curl --request POST \
+  --url https://api.mutasib.com/api/v1/auth/login \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "email": "sara@example.com",
+    "password": "S3cur3P@ssw0rd!"
+  }'
+```
+
+```json Request Body
+{
+  "email": "sara@example.com",
+  "password": "S3cur3P@ssw0rd!"
+}
+```
+
+</CodeGroup>
+
+### Response — 200 OK
+
+When 2FA is **not** enabled on the account, the API returns a `TokenOut` object immediately.
+
+```json
+{
+  "access": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImV4cCI6MTcxNTAwMDAwMH0.signature",
+  "refresh": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImV4cCI6MTcxNTYwMDAwMH0.signature",
+  "token_type": "bearer"
+}
+```
+
+<ResponseField name="access" type="string">
+  A short-lived RS256-signed JWT. Pass this value in the `Authorization: Bearer` header for all authenticated requests.
+</ResponseField>
+
+<ResponseField name="refresh" type="string">
+  A longer-lived RS256-signed JWT. Use it to obtain a fresh access token via the token refresh endpoint without requiring the user to log in again.
+</ResponseField>
+
+<ResponseField name="token_type" type="string">
+  Always `"bearer"`. Indicates the token scheme you should use in the `Authorization` header.
+</ResponseField>
+
+---
+
+## Two-Factor Authentication Login
+
+When 2FA is enabled on the account, the initial login call returns `202 Accepted` instead of `200 OK`, signalling that a second authentication step is required before tokens are issued.
+
+```json
+{
+  "message": "2FA verification required. Please complete the second factor to proceed."
+}
+```
+
+### Email 2FA
+
+If the account uses email-based 2FA, Mutasib sends a one-time code to the registered email address. Submit that code to complete the login:
+
+```
+POST /api/v1/auth/login-email-2fa
+```
+
+```bash
+curl --request POST \
+  --url https://api.mutasib.com/api/v1/auth/login-email-2fa \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "email": "sara@example.com",
+    "code": "847291"
+  }'
+```
+
+<ParamField body="email" type="string" required>
+  The email address of the account completing the 2FA challenge.
+</ParamField>
+
+<ParamField body="code" type="string" required>
+  The six-digit one-time code sent to the account's email address.
+</ParamField>
+
+A successful `200 OK` returns the same `TokenOut` object described above.
+
+### TOTP 2FA
+
+If the account uses a TOTP authenticator app, include the six-digit code from your app in the original login request:
+
+```
+POST /api/v1/auth/login-2fa
+```
+
+```bash
+curl --request POST \
+  --url https://api.mutasib.com/api/v1/auth/login-2fa \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "email": "sara@example.com",
+    "password": "S3cur3P@ssw0rd!",
+    "code": "123456"
+  }'
+```
+
+<ParamField body="email" type="string" required>
+  The email address of the account.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The account password.
+</ParamField>
+
+<ParamField body="code" type="string" required>
+  The current six-digit code from your TOTP authenticator app.
+</ParamField>
+
+A successful `200 OK` returns the `TokenOut` object.
+
+---
+
+## Token Refresh
+
+Access tokens expire quickly. Use your refresh token to obtain a new access token and a new refresh token without prompting the user for their password again.
+
+### Endpoint
+
+```
+POST /api/v1/auth/refresh
+```
+
+### Example Request
+
+<CodeGroup>
+
+```bash curl
+curl --request POST \
+  --url https://api.mutasib.com/api/v1/auth/refresh \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "refresh": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImV4cCI6MTcxNTYwMDAwMH0.signature"
+  }'
+```
+
+```json Request Body
+{
+  "refresh": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImV4cCI6MTcxNTYwMDAwMH0.signature"
+}
+```
+
+</CodeGroup>
+
+### Response — 200 OK
+
+```json
+{
+  "access": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImV4cCI6MTcxNTAwMzYwMH0.new_signature",
+  "refresh": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImV4cCI6MTcxNTYwMzYwMH0.new_signature"
+}
+```
+
+Both tokens are rotated on every refresh call. Discard the old refresh token as soon as you receive the new pair.
+
+---
+
+## Google OAuth Login
+
+You can authenticate users who signed up or linked their account via Google. Exchange a Google OAuth access token for Mutasib JWT tokens by calling:
+
+```
+POST /api/v1/auth/oauth/google?access_token=<google_token>&role=shopowner
+```
+
+<ParamField query="access_token" type="string" required>
+  A valid Google OAuth 2.0 access token obtained from Google's OAuth flow on the client side.
+</ParamField>
+
+<ParamField query="role" type="string">
+  Role to assign when creating a new account via OAuth. Defaults to `shopowner`. Accepted values: `shopowner`, `cashier`. Ignored for existing accounts.
+</ParamField>
+
+```bash
+curl --request POST \
+  --url 'https://api.mutasib.com/api/v1/auth/oauth/google?access_token=ya29.a0AfB_byC...&role=shopowner'
+```
+
+- **200 OK** — returns a `TokenOut` object (account has no 2FA).
+- **202 Accepted** — account has 2FA enabled; complete the challenge before tokens are issued.
+
+### OAuth + 2FA
+
+When an OAuth-authenticated account has 2FA enabled, complete the challenge with:
+
+```
+POST /api/v1/auth/login-oauth-2fa
+```
+
+```bash
+curl --request POST \
+  --url https://api.mutasib.com/api/v1/auth/login-oauth-2fa \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "temp_auth_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.temp.token",
+    "code": "482019"
+  }'
+```
+
+<ParamField body="temp_auth_token" type="string" required>
+  The temporary token returned in the `202` response body from the OAuth login endpoint.
+</ParamField>
+
+<ParamField body="code" type="string" required>
+  The six-digit 2FA code (TOTP or email, depending on which method is enabled).
+</ParamField>
+
+A successful `200 OK` returns the `TokenOut` object.
+
+---
+
+## Error Responses
+
+| Status | Reason |
+|--------|--------|
+| `400 Bad Request` | Missing or malformed request body fields. |
+| `403 Forbidden` | Incorrect password, unverified email address, or account banned by an administrator. |
+| `429 Too Many Requests` | Login rate limit exceeded. Wait before retrying. |
+
+<Tip>
+  Refresh your access token proactively — a few minutes before it expires — rather than waiting for a `401 Unauthorized` error. This avoids any interruption to your users' sessions and keeps your integration resilient to clock skew.
+</Tip>

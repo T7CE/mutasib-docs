@@ -1,0 +1,243 @@
+---
+title: "Product Categories API for Mutasib Shops"
+sidebarTitle: "Categories"
+description: "Create, update, and delete custom product categories per shop. Browse system preset categories returned as a nested tree for easy integration."
+---
+
+Categories help you organize your products so staff can find them quickly at the point of sale and customers can browse them on your storefront. Each shop maintains its own category tree, and you can create unlimited subcategories by linking a category to a `parent_id`. Alternatively, you can browse the system-provided preset categories — a curated set of common retail categories maintained by Mutasib — and use their names to seed your own catalog.
+
+---
+
+## Create a category
+
+<br />
+
+`POST /api/v1/shops/{shop_id}/categories/`
+
+Creates a new category in the specified shop. To create a top-level category, omit `parent_id`. To create a subcategory, pass the ID of an existing category in the same shop as `parent_id`.
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  The display name of the category in the primary language.
+</ParamField>
+
+<ParamField body="name_ar" type="string" default='""'>
+  The Arabic name of the category. Used in bilingual storefronts. Leave blank if you do not need Arabic labels.
+</ParamField>
+
+<ParamField body="parent_id" type="integer">
+  ID of the parent category, creating a subcategory relationship. Omit or pass `null` to create a top-level category.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/categories/ \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Dairy & Eggs",
+    "name_ar": "الألبان والبيض",
+    "parent_id": null
+  }'
+```
+
+Returns `201 Created` with a [CategoryOut](#categoryout-fields) object.
+
+---
+
+## List categories
+
+<br />
+
+`GET /api/v1/shops/{shop_id}/categories`
+
+Returns the full category tree for the shop. Top-level categories are returned as root objects, and each category includes a `children` array containing its subcategories, recursively nested.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/categories \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `200 OK` with an array of top-level [CategoryOut](#categoryout-fields) objects, each with a nested `children` array.
+
+```json
+[
+  {
+    "id": 10,
+    "shop_id": 42,
+    "name": "Dairy & Eggs",
+    "name_ar": "الألبان والبيض",
+    "parent_id": null,
+    "is_active": true,
+    "created_at": "2024-03-15T09:00:00Z",
+    "children": [
+      {
+        "id": 11,
+        "shop_id": 42,
+        "name": "Milk",
+        "name_ar": "حليب",
+        "parent_id": 10,
+        "is_active": true,
+        "created_at": "2024-03-15T09:05:00Z",
+        "children": []
+      }
+    ]
+  }
+]
+```
+
+---
+
+## Update a category
+
+<br />
+
+`PATCH /api/v1/shops/{shop_id}/categories/{category_id}/`
+
+Partially updates a category. You can rename it, add or update the Arabic name, reassign its parent, or toggle its active status.
+
+<ParamField body="name" type="string">
+  Updated display name.
+</ParamField>
+
+<ParamField body="name_ar" type="string">
+  Updated Arabic name.
+</ParamField>
+
+<ParamField body="parent_id" type="integer | null">
+  Updated parent category ID. Pass `null` to promote the category to the top level.
+</ParamField>
+
+<ParamField body="is_active" type="boolean">
+  Set to `false` to hide the category and all its products from the storefront.
+</ParamField>
+
+```bash
+curl -X PATCH https://api.mutasib.com/api/v1/shops/42/categories/10/ \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Dairy, Eggs & Cheese"
+  }'
+```
+
+Returns `200 OK` with the updated [CategoryOut](#categoryout-fields) object.
+
+---
+
+## Delete a category
+
+<br />
+
+`DELETE /api/v1/shops/{shop_id}/categories/{category_id}/`
+
+Permanently deletes the category. Products currently assigned to this category will have their `category_id` set to `null` — they are not deleted.
+
+```bash
+curl -X DELETE https://api.mutasib.com/api/v1/shops/42/categories/11/ \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `204 No Content` on success.
+
+<Warning>
+  Deleting a parent category also removes all of its subcategories. Products assigned to the deleted categories are not deleted but will become uncategorized.
+</Warning>
+
+---
+
+## Get preset categories
+
+<br />
+
+`GET /api/v1/shops/preset-categories/`
+
+Returns the system-wide library of preset categories maintained by Mutasib. These are common retail categories you can use as inspiration for your own shop structure. This endpoint is **public** — no authentication is required.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/preset-categories/
+```
+
+Returns `200 OK` with a nested tree of preset category objects. The structure mirrors the shop categories tree but uses system-assigned IDs.
+
+```json
+[
+  {
+    "id": 1,
+    "name": "Grocery",
+    "name_ar": "بقالة",
+    "parent_id": null,
+    "children": [
+      {
+        "id": 2,
+        "name": "Bakery",
+        "name_ar": "مخبوزات",
+        "parent_id": 1,
+        "children": []
+      },
+      {
+        "id": 3,
+        "name": "Beverages",
+        "name_ar": "مشروبات",
+        "parent_id": 1,
+        "children": []
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Electronics",
+    "name_ar": "إلكترونيات",
+    "parent_id": null,
+    "children": [
+      {
+        "id": 11,
+        "name": "Mobile Phones",
+        "name_ar": "هواتف",
+        "parent_id": 10,
+        "children": []
+      }
+    ]
+  }
+]
+```
+
+<Tip>
+  You do not need to copy preset category IDs into your shop. Preset categories are a reference only. Create your own shop categories using the [Create a category](#create-a-category) endpoint and use `name` values from the preset list if you want consistency.
+</Tip>
+
+---
+
+## CategoryOut fields
+
+<ResponseField name="id" type="integer">
+  Unique numeric identifier for the category.
+</ResponseField>
+
+<ResponseField name="shop_id" type="integer">
+  ID of the shop this category belongs to.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Display name of the category in the primary language.
+</ResponseField>
+
+<ResponseField name="name_ar" type="string">
+  Arabic display name of the category.
+</ResponseField>
+
+<ResponseField name="parent_id" type="integer | null">
+  ID of the parent category, or `null` if this is a top-level category.
+</ResponseField>
+
+<ResponseField name="is_active" type="boolean">
+  Whether this category is currently active and visible.
+</ResponseField>
+
+<ResponseField name="children" type="array">
+  Nested array of child [CategoryOut](#categoryout-fields) objects. Empty array if the category has no subcategories.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the category was created.
+</ResponseField>

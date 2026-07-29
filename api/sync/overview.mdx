@@ -1,0 +1,188 @@
+---
+title: "Offline Sync API: Batch Operations and Replay Protection"
+sidebarTitle: "Sync"
+description: "Sync batches of offline operations securely using HMAC-SHA256 signed requests with idempotent client IDs via the Mutasib API."
+---
+
+The sync API is designed for environments where connectivity is unreliable — a mobile POS in a low-signal area, a desktop app that works offline, or a kiosk that queues operations during network outages. You record operations locally as they happen, then submit them as a single signed batch when the connection is restored. Mutasib processes each operation in order, deduplicates anything it has already seen, and returns a per-operation result.
+
+## Security Model
+
+Before submitting a batch, you need to understand three security mechanisms the sync API enforces:
+
+- **JWT Bearer token** — every sync request must include a valid `Authorization: Bearer <token>` header, just like any other Mutasib API call.
+- **HMAC-SHA256 signature** — the `operations` array is signed using your access token as the key. Mutasib verifies the signature server-side to confirm the batch has not been tampered with in transit. See the [Python signature example](#generating-the-signature) below.
+- **Client ID idempotency** — each operation must carry a unique `client_id` (UUID v4). If you submit the same `client_id` twice — whether in the same batch or a later one — Mutasib marks it as a `duplicate` and skips processing. This makes retrying failed batches safe.
+- **24-hour timestamp window** — each operation's `client_timestamp` must fall within 24 hours of the server's current UTC time. Operations outside this window are rejected to prevent replay attacks.
+
+---
+
+## Submit a Sync Batch
+
+Send a signed batch of offline operations for processing.
+
+**`POST /api/v1/sync/sync/`**
+
+### Request body — `SyncBatchIn`
+
+<ParamField path="operations" type="array" required>
+  Ordered list of operations to process. Each element is a `SyncOperationIn` object.
+
+  <Expandable title="SyncOperationIn properties">
+    <ParamField path="client_id" type="string" required>
+      A UUID v4 string that uniquely identifies this operation on the client. Used for idempotency.
+    </ParamField>
+    <ParamField path="shop_id" type="integer" required>
+      The ID of the shop this operation applies to.
+    </ParamField>
+    <ParamField path="op_type" type="string" required>
+      The type of operation to perform. Supported values include `create_sale` and `adjust_inventory`.
+    </ParamField>
+    <ParamField path="client_timestamp" type="string" required>
+      ISO 8601 UTC timestamp of when the operation was recorded on the client (e.g. `"2024-01-15T10:32:00Z"`). Must be within 24 hours of server UTC time.
+    </ParamField>
+    <ParamField path="payload" type="object" required>
+      The operation data. For `create_sale`, this is a `SaleCreateIn` object. For `adjust_inventory`, this is an `InventoryAdjustIn` object with an additional `product_id` field.
+    </ParamField>
+  </Expandable>
+</ParamField>
+<ParamField path="batch_id" type="string" required>
+  A UUID v4 string identifying this batch as a whole. Use the same `batch_id` if you retry a failed submission.
+</ParamField>
+<ParamField path="client_signature" type="string" required>
+  HMAC-SHA256 hex digest of the serialized `operations` array, signed with your access token. See [Generating the Signature](#generating-the-signature).
+</ParamField>
+
+**Full request example**
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/sync/sync/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "batch_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "client_signature": "a3f8d2e1c7b4...",
+    "operations": [
+      {
+        "client_id": "123e4567-e89b-12d3-a456-426614174000",
+        "shop_id": 42,
+        "op_type": "create_sale",
+        "client_timestamp": "2024-01-15T10:32:00Z",
+        "payload": {
+          "items": [
+            { "product_id": 101, "quantity": 2 },
+            { "product_id": 205, "quantity": 1 }
+          ]
+        }
+      },
+      {
+        "client_id": "789e0123-e89b-12d3-a456-426614174001",
+        "shop_id": 42,
+        "op_type": "adjust_inventory",
+        "client_timestamp": "2024-01-15T10:35:00Z",
+        "payload": {
+          "product_id": 307,
+          "adjustment": 12,
+          "reason": "purchase",
+          "note": "Delivery from Al-Fajr Distributors"
+        }
+      }
+    ]
+  }'
+```
+
+### Response — `SyncBatchOut`
+
+<ResponseField name="batch_id" type="string">
+  Echo of the `batch_id` you submitted.
+</ResponseField>
+<ResponseField name="processed" type="integer">
+  Number of operations successfully applied.
+</ResponseField>
+<ResponseField name="duplicates" type="integer">
+  Number of operations skipped because their `client_id` was already processed.
+</ResponseField>
+<ResponseField name="failed" type="integer">
+  Number of operations that could not be applied due to errors.
+</ResponseField>
+<ResponseField name="results" type="array">
+  Per-operation result objects.
+
+  <Expandable title="SyncOpResult properties">
+    <ResponseField name="client_id" type="string">
+      The `client_id` from the submitted operation.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Outcome for this operation: `success`, `duplicate`, or `failed`.
+    </ResponseField>
+    <ResponseField name="server_id" type="integer">
+      The server-assigned ID of the created resource (e.g. sale ID). Present only when `status` is `success`.
+    </ResponseField>
+    <ResponseField name="error" type="string">
+      Human-readable error message. Present only when `status` is `failed`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Check Sync Status
+
+Retrieve the current processing status and configuration for the sync system.
+
+**`GET /api/v1/sync/sync/status/`**
+
+```bash
+curl https://api.mutasib.com/api/v1/sync/sync/status/ \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Check Pending Operations
+
+Query which client operation IDs have already been processed by the server. Use this before building a batch to avoid including operations you know have already landed.
+
+**`GET /api/v1/sync/sync/pending/`**
+
+<ParamField query="client_ids" type="string">
+  Comma-separated list of UUID client IDs to check (e.g. `uuid1,uuid2,uuid3`).
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/sync/sync/pending/?client_ids=123e4567-e89b-12d3-a456-426614174000,789e0123-e89b-12d3-a456-426614174001" \
+  -H "Authorization: Bearer <token>"
+```
+
+Returns an object indicating which of the provided IDs have already been processed, so you can safely exclude them from your next batch.
+
+---
+
+## Generating the Signature
+
+Compute the `client_signature` by serializing the `operations` array to compact, deterministic JSON (sorted keys, no spaces) and computing an HMAC-SHA256 digest using your access token as the key.
+
+```python
+import hmac
+import hashlib
+import json
+
+def sign_batch(operations: list, access_token: str) -> str:
+    payload = json.dumps(operations, separators=(',', ':'), sort_keys=True)
+    return hmac.new(
+        access_token.encode(),
+        payload.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+# Usage
+signature = sign_batch(operations_list, "your_access_token_here")
+```
+
+The resulting hex string is what you pass as `client_signature` in your batch request. Mutasib recomputes the same digest server-side and rejects the batch if they do not match.
+
+---
+
+<Warning>
+  Each operation's `client_timestamp` must be within **24 hours** of the server's current UTC time. Batches containing operations outside this window will have those operations rejected with a `failed` status. Make sure your client device's clock is synchronized (e.g. via NTP) before building sync batches, especially after the device has been offline for an extended period.
+</Warning>

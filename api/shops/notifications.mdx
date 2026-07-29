@@ -1,0 +1,95 @@
+---
+title: "Shop Notification Settings API"
+sidebarTitle: "Notifications Settings"
+description: "Get and update per-shop notification settings, including email reports and low-stock alert frequency, via the Mutasib REST API."
+---
+
+Each shop in Mutasib has its own notification settings that control how and when you receive automated alerts. You can enable scheduled email reports to track performance, and configure low-stock alerts so you are notified before inventory runs dry. Settings are stored per shop and can be updated at any time.
+
+---
+
+## Get notification settings
+
+<br />
+
+`GET /api/v1/shops/{shop_id}/notifications`
+
+Returns the current notification settings for the specified shop.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/notifications \
+  -H "Authorization: Bearer <your_token>"
+```
+
+**Response**
+
+<ResponseField name="email_reports" type="boolean">
+  Whether scheduled email performance reports are enabled for this shop. Defaults to `false`.
+</ResponseField>
+
+<ResponseField name="low_stock_alerts" type="boolean">
+  Whether low-stock alerts are enabled. When `true`, Mutasib sends a notification whenever a product's stock falls at or below its `low_stock_threshold`. Defaults to `false`.
+</ResponseField>
+
+<ResponseField name="alert_frequency" type="string">
+  How often low-stock alert digests are sent. Defaults to `"24h"`. See [Alert frequency values](#alert-frequency-values) for all accepted values.
+</ResponseField>
+
+---
+
+## Update notification settings
+
+<br />
+
+`PATCH /api/v1/shops/{shop_id}/notifications`
+
+Partially updates the notification settings for a shop. Only the fields you include in the request body are changed.
+
+### Request body
+
+<ParamField body="email_reports" type="boolean">
+  Set to `true` to enable scheduled email performance reports, or `false` to disable them.
+</ParamField>
+
+<ParamField body="low_stock_alerts" type="boolean">
+  Set to `true` to enable low-stock inventory alerts, or `false` to disable them.
+</ParamField>
+
+<ParamField body="alert_frequency" type="string">
+  How often to send low-stock alert digests. Accepted values: `"24h"`, `"12h"`, `"6h"`, `"1h"`.
+</ParamField>
+
+The following example enables low-stock alerts and sets them to fire every 24 hours:
+
+```bash
+curl -X PATCH https://api.mutasib.com/api/v1/shops/42/notifications \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "low_stock_alerts": true,
+    "alert_frequency": "24h"
+  }'
+```
+
+Returns `200 OK` with the full updated `NotificationSettingsOut` object.
+
+---
+
+## Alert frequency values
+
+The `alert_frequency` field controls how often Mutasib checks and sends low-stock digest notifications. Choose a frequency that matches how quickly your inventory moves.
+
+| Value | Description |
+|-------|-------------|
+| `"1h"` | Alert digest sent every hour. Best for high-volume, fast-moving inventory. |
+| `"6h"` | Alert digest sent every 6 hours. |
+| `"12h"` | Alert digest sent every 12 hours. |
+| `"24h"` | Alert digest sent once per day (default). Best for slower-moving inventory. |
+
+<Note>
+  Email reports (`email_reports: true`) are a **Pro plan feature**. Enabling this setting on a Free or Starter plan shop will return a `403 Forbidden` response. Upgrade your plan first via the [Plans API](/api/shops/plans) before enabling email reports.
+</Note>
+
+<Tip>
+  If you manage multiple shops, consider setting `alert_frequency` to `"6h"` or `"12h"` for busy locations and keeping `"24h"` for quieter branches to avoid notification fatigue.
+</Tip>

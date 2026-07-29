@@ -1,0 +1,87 @@
+---
+title: "Mutasib API: Shop Management for Developers"
+sidebarTitle: "Introduction"
+description: "Mutasib's REST API lets you build on top of a full-featured shop management platform — POS, inventory, analytics, AI insights, and multi-cashier support."
+---
+
+Mutasib is an all-in-one shop management platform built for retailers, boutique owners, and their teams. Whether you run a single register or a multi-cashier storefront, Mutasib handles point-of-sale, inventory tracking, sales analytics, and AI-powered insights under one roof. The Mutasib REST API exposes every core capability so you can integrate Mutasib into your own apps, automate workflows, build custom dashboards, or extend the platform to fit your business logic.
+
+## Key capabilities
+
+<CardGroup cols={2}>
+  <Card title="Authentication & Users" icon="lock">
+    Register accounts, log in with email/password or Google OAuth, manage JWT tokens, and enforce 2FA via TOTP or email codes.
+  </Card>
+  <Card title="Shop Management" icon="store">
+    Create and configure shops, set opening hours, geolocation, categories, and manage approval status and plan features.
+  </Card>
+  <Card title="Products & Catalog" icon="tag">
+    Add, update, and delete products. Manage pricing, SKUs, categories, and product images across your entire catalog.
+  </Card>
+  <Card title="Sales & POS" icon="cash-register">
+    Record sales transactions, generate receipts, apply discounts, and support multi-cashier workflows at the point of sale.
+  </Card>
+  <Card title="Inventory" icon="boxes-stacked">
+    Track stock levels in real time, set low-stock alerts, manage suppliers, and automate reorder triggers.
+  </Card>
+  <Card title="Analytics & AI" icon="chart-mixed">
+    Query sales trends, top-selling products, revenue summaries, and AI-generated insights to make smarter business decisions.
+  </Card>
+</CardGroup>
+
+## Base URL
+
+All API requests are made over HTTPS. The current version of the API is `v1`.
+
+<Info>
+  **Base URL:** `https://api.mutasib.com`
+
+  Prefix every endpoint with `/api/v1/`. For example, to log in:
+
+  ```
+  POST https://api.mutasib.com/api/v1/auth/login
+  ```
+</Info>
+
+## Authentication
+
+The Mutasib API uses **JWT Bearer tokens** for authentication. Every request to a protected endpoint must include an `Authorization` header:
+
+```
+Authorization: Bearer <your_access_token>
+```
+
+When you register or log in, the API returns two tokens:
+
+- **Access token** — short-lived credential you include in request headers. Expires after a set interval (typically 15–30 minutes).
+- **Refresh token** — longer-lived token used exclusively to obtain a new access token when the current one expires. Send it to `POST /api/v1/auth/refresh` to rotate both tokens.
+
+Never include your access token as a query parameter. Keep your refresh token stored securely — treat it like a password.
+
+## Plans & limits
+
+Your shop's plan controls which API features are available and at what scale. The table below summarises the limits most relevant to API usage.
+
+| Feature | Free | Starter ($7/mo) | Pro ($19/mo) |
+|---|---|---|---|
+| Cashier seats | 1 | 3 | Unlimited |
+| Products | Up to 50 | Up to 500 | Unlimited |
+| Sales history | 30 days | 1 year | Unlimited |
+| Analytics & AI insights | Basic | Standard | Full access |
+| API rate limit | 60 req/min | 300 req/min | 1 000 req/min |
+| Priority support | — | — | ✓ |
+
+<Note>
+  Plan features are returned on every `ShopOut` response in the `plan_features` object, so your integration can branch on capabilities at runtime without hard-coding plan names.
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Make your first API call in minutes — register, create a shop, add a product, and record a sale.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Deep-dive into JWT tokens, token refresh, Google OAuth, and two-factor authentication.
+  </Card>
+</CardGroup>

@@ -1,0 +1,166 @@
+---
+title: "Public API: Shop Discovery and Product Search"
+sidebarTitle: "Public API"
+description: "Search products and shops publicly without authentication. Find nearby shops, browse listings, and access receipts via the Mutasib API."
+---
+
+The public API endpoints require no authentication — you can call them directly from a browser, a mobile app, or any backend service without a JWT token. Use them to build customer-facing product search, shop discovery pages, nearby-store finders, and receipt viewers.
+
+<Note>
+  Shops are only returned by public endpoints if they are **approved and active** in the Mutasib platform. Individual products must have `is_public` set to `true` to appear in public search results and shop product listings.
+</Note>
+
+## Search Products
+
+Search across all public products on the platform with optional filters for category, price range, and shop.
+
+**`GET /api/v1/public/search/`**
+
+<ParamField query="q" type="string">
+  Search query string. Matches against product names, descriptions, and barcodes.
+</ParamField>
+<ParamField query="category" type="string">
+  Filter results to a specific product category (e.g. `grocery`, `dairy`, `beverages`).
+</ParamField>
+<ParamField query="min_price" type="number">
+  Minimum unit price filter.
+</ParamField>
+<ParamField query="max_price" type="number">
+  Maximum unit price filter.
+</ParamField>
+<ParamField query="shop_id" type="integer">
+  Restrict results to a single shop.
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/public/search/?q=milk&category=dairy&min_price=1&max_price=50"
+```
+
+Returns an array of `ProductListOut` objects matching the search criteria, sorted by relevance.
+
+---
+
+## List Public Shops
+
+Browse all approved, active shops on the platform. Optionally filter by category.
+
+**`GET /api/v1/public/shops/`**
+
+<ParamField query="category" type="string">
+  Filter shops by their primary business category (e.g. `grocery`, `pharmacy`, `bakery`).
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/public/shops/?category=grocery"
+```
+
+Returns an array of `ShopListOut` objects.
+
+---
+
+## Get Shop Details
+
+Retrieve the public profile of a single shop by its ID, including name, location, and category.
+
+**`GET /api/v1/public/shops/{shop_id}/`**
+
+```bash
+curl https://api.mutasib.com/api/v1/public/shops/42/
+```
+
+Returns a single `ShopListOut` object with full shop detail.
+
+---
+
+## Get Shop Products
+
+List all public products offered by a specific shop. Supports search and category filtering.
+
+**`GET /api/v1/public/shops/{shop_id}/products/`**
+
+<ParamField query="search" type="string">
+  Filter products by name or barcode.
+</ParamField>
+<ParamField query="category_id" type="integer">
+  Filter products by category ID.
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/public/shops/42/products/?search=water&category_id=3"
+```
+
+Returns an array of `ProductListOut` objects belonging to that shop where `is_public` is `true`.
+
+---
+
+## Nearby Shops
+
+Find approved shops within a given radius of a geographic coordinate. Results are sorted by distance from the provided location.
+
+**`GET /api/v1/public/shops/nearby/`**
+
+<ParamField query="lat" type="number" required>
+  Latitude of the search origin (decimal degrees, e.g. `36.7`).
+</ParamField>
+<ParamField query="lng" type="number" required>
+  Longitude of the search origin (decimal degrees, e.g. `3.05`).
+</ParamField>
+<ParamField query="radius" type="number">
+  Search radius in kilometres. Defaults to `10`.
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/public/shops/nearby/?lat=36.7&lng=3.05&radius=10"
+```
+
+**Example response**
+
+```json
+[
+  {
+    "id": 42,
+    "name": "Al-Nour Supermarket",
+    "category": "grocery",
+    "address": "12 Rue Didouche Mourad, Algiers",
+    "distance_km": 1.4
+  },
+  {
+    "id": 87,
+    "name": "Baraka Mini-Market",
+    "category": "grocery",
+    "address": "Cité des 1000 Logements, Bir Mourad Raïs",
+    "distance_km": 3.7
+  }
+]
+```
+
+Returns an array of `ShopListOut` objects, each augmented with a `distance_km` field indicating how far the shop is from the provided coordinates.
+
+---
+
+## Receipt by Token
+
+Retrieve the full details of a sale using its `receipt_token`. This endpoint is public — no authentication is needed — making it suitable for QR code links you print on paper receipts or send via SMS.
+
+**`GET /api/v1/public/receipt/{token}`**
+
+```bash
+curl https://api.mutasib.com/api/v1/public/receipt/rcpt_a1b2c3d4e5f6
+```
+
+Returns a `SaleOut` object with the full list of purchased items. See [Sales API](/api/sales/overview) for `SaleOut` field definitions.
+
+---
+
+## Receipt PDF
+
+Download a formatted PDF copy of a receipt. Useful for customers who need a printable or saveable version.
+
+**`GET /api/v1/public/receipt/{token}/pdf`**
+
+```bash
+curl -o receipt.pdf \
+  https://api.mutasib.com/api/v1/public/receipt/rcpt_a1b2c3d4e5f6/pdf
+```
+
+Returns a binary PDF file with `Content-Type: application/pdf`. The PDF includes the shop name, cashier, itemized list, and total amount.

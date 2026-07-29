@@ -1,0 +1,229 @@
+---
+title: "Sales, Receipts, and Inventory Management"
+sidebarTitle: "Sales & Inventory"
+description: "Record sales, auto-decrement stock, generate shareable digital receipts, track inventory movements, adjust stock manually, and manage customer credit notes — all in one place."
+---
+
+Every sale in Mutasib is a complete, auditable record: it captures which products were sold, who processed the transaction, at what unit price, and at what time. The moment a sale is created, Mutasib automatically decrements the stock of each product included in the transaction. You never have to update inventory manually after a sale.
+
+## Sales Data Model
+
+The `SaleOut` schema contains everything you need to understand a completed transaction.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string (UUID) | Unique sale identifier |
+| `shop_id` | string (UUID) | The shop this sale was recorded in |
+| `shop_name` | string | Display name of the shop at time of sale |
+| `cashier_id` | string (UUID) | ID of the cashier who processed the sale |
+| `cashier_name` | string | Display name of the cashier |
+| `items` | array | Line items — see structure below |
+| `total_amount` | number | Sum of all line item totals |
+| `receipt_token` | string | Unique token used to generate the public receipt URL |
+| `created_at` | string (ISO 8601) | Timestamp when the sale was recorded |
+
+Each object in the `items` array contains:
+
+| Field | Type | Description |
+|---|---|---|
+| `product_id` | string (UUID) | The product that was sold |
+| `product_name` | string | Snapshot of the product name at time of sale |
+| `barcode` | string \| null | Product barcode at time of sale |
+| `quantity` | number | Quantity sold |
+| `unit_price` | number | Price per unit charged |
+| `total` | number | `quantity × unit_price` |
+
+<Info>
+  Product name and price are snapshotted at the time of the sale. If you later change a product's name or price, historical sales remain accurate.
+</Info>
+
+## Creating a Sale
+
+To record a sale, send a `POST` request with the shop ID in the path and a list of items in the body. The cashier is determined automatically from the authenticated token.
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/sales/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      {
+        "product_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "quantity": 2,
+        "unit_price": 150.00
+      },
+      {
+        "product_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "quantity": 1,
+        "unit_price": 85.50
+      }
+    ]
+  }'
+```
+
+A successful response returns the full `SaleOut` object, including the `receipt_token` you can use to share a digital receipt with the customer.
+
+<Note>
+  Stock is decremented immediately and atomically when the sale is created. If any product in the sale has insufficient stock, the entire request is rejected — no partial sales are recorded.
+</Note>
+
+## Digital Receipts
+
+Every sale automatically generates a `receipt_token` — a URL-safe string that acts as a shareable, public link to the receipt. No authentication is required to view it, making it easy to send to customers via WhatsApp, SMS, or email.
+
+The public receipt endpoint is:
+
+```
+GET https://api.mutasib.com/api/v1/public/receipt/{token}
+```
+
+To download a print-ready PDF version of the same receipt:
+
+```
+GET https://api.mutasib.com/api/v1/public/receipt/{token}/pdf
+```
+
+Both endpoints are unauthenticated and safe to embed in QR codes or short links.
+
+<Tip>
+  Display the receipt URL as a QR code on your POS screen so customers can scan and save their own receipt without you needing to collect contact details.
+</Tip>
+
+## Inventory Tracking
+
+Mutasib maintains a live inventory count for every product. Beyond the automatic stock decrement on sale, you have full visibility into the current state of your stock and every movement that has ever occurred.
+
+### Stock Snapshot
+
+Get the current stock level for all products in one request:
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/{shop_id}/inventory/ \
+  -H "Authorization: Bearer <token>"
+```
+
+### Manual Stock Adjustment
+
+Use this endpoint to record a delivery, write-off, or any correction that isn't tied to a sale. The `adjustment` field is a signed integer — positive values add stock, negative values remove it.
+
+```bash
+curl -X PATCH https://api.mutasib.com/api/v1/shops/{shop_id}/inventory/{product_id}/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adjustment": 50,
+    "reason": "delivery",
+    "note": "Received supplier order #PO-2024-089"
+  }'
+```
+
+The `InventoryAdjustIn` schema accepts the following fields:
+
+<ResponseField name="adjustment" type="integer" required>
+  Signed integer representing the stock delta. Use a positive number to add stock and a negative number to remove it.
+</ResponseField>
+
+<ResponseField name="low_stock_threshold" type="integer">
+  Optionally update the low-stock alert threshold at the same time as the adjustment.
+</ResponseField>
+
+<ResponseField name="reason" type="string">
+  Reason for the adjustment. Defaults to `adjustment`. Common values: `delivery`, `write-off`, `correction`, `return`.
+</ResponseField>
+
+<ResponseField name="note" type="string">
+  Free-text note for internal reference, such as a purchase order number.
+</ResponseField>
+
+### Low-Stock Alerts
+
+Retrieve all products whose stock is at or below their `low_stock_threshold`:
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/{shop_id}/inventory/low-stock/ \
+  -H "Authorization: Bearer <token>"
+```
+
+Use this endpoint to build reorder workflows or trigger notifications when you're running low on key items.
+
+### Movement Log
+
+The movement log gives you a complete, chronological record of every stock change — sales, manual adjustments, returns, and more:
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/{shop_id}/inventory/movements/ \
+  -H "Authorization: Bearer <token>"
+```
+
+Each entry in the log records the product, the delta, the reason, the actor (cashier or owner), and the timestamp.
+
+## Credit Notes
+
+Credit notes let you track money customers owe your shop — or credit balances you owe them. This is a Pro plan feature designed for shops that extend informal credit to regular customers.
+
+<Note>
+  Credit notes are available on the **Pro plan** only. Attempting to use these endpoints on Free or Starter will return a `403 Forbidden` response.
+</Note>
+
+### Creating a Credit Note
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/credit-notes/{shop_id}/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_name": "Ahmed Benali",
+    "amount": 2500.00,
+    "note": "Weekly tab — unpaid balance",
+    "due_date": "2024-02-15"
+  }'
+```
+
+The `due_date` field is optional. Omit it for open-ended credit with no fixed repayment date.
+
+### Listing Credit Notes
+
+Retrieve all credit notes for your shop. You can filter by status to see only open, paid, or overdue notes:
+
+```bash
+curl "https://api.mutasib.com/api/v1/credit-notes/{shop_id}/?status=open" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Updating a Credit Note
+
+Mark a note as paid or update its details:
+
+```bash
+curl -X PATCH https://api.mutasib.com/api/v1/credit-notes/{shop_id}/{note_id}/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "status": "paid" }'
+```
+
+### Customer View
+
+Customers can retrieve their own credit notes across all shops without needing shop-owner credentials:
+
+```bash
+curl https://api.mutasib.com/api/v1/credit-notes/my/ \
+  -H "Authorization: Bearer <customer-token>"
+```
+
+## Endpoint Summary
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/shops/{shop_id}/sales/` | Record a new sale |
+| `GET` | `/api/v1/shops/{shop_id}/sales/` | List sales with optional date filters |
+| `GET` | `/api/v1/shops/{shop_id}/sales/{sale_id}` | Get a single sale |
+| `GET` | `/api/v1/public/receipt/{token}` | View public receipt (no auth) |
+| `GET` | `/api/v1/public/receipt/{token}/pdf` | Download receipt as PDF (no auth) |
+| `GET` | `/api/v1/shops/{shop_id}/inventory/` | Current stock snapshot |
+| `PATCH` | `/api/v1/shops/{shop_id}/inventory/{product_id}/` | Manually adjust stock |
+| `GET` | `/api/v1/shops/{shop_id}/inventory/low-stock/` | Products below threshold |
+| `GET` | `/api/v1/shops/{shop_id}/inventory/movements/` | Full stock movement log |
+| `POST` | `/api/v1/credit-notes/{shop_id}/` | Create a credit note |
+| `GET` | `/api/v1/credit-notes/{shop_id}/` | List credit notes for a shop |
+| `PATCH` | `/api/v1/credit-notes/{shop_id}/{note_id}/` | Update a credit note |
+| `GET` | `/api/v1/credit-notes/my/` | Customer's own credit notes |

@@ -1,0 +1,87 @@
+---
+title: "Register a New Mutasib Account"
+sidebarTitle: "Register"
+description: "POST /api/v1/auth/register — create a new user account. Accepts email, username, password, and role."
+---
+
+Registration creates a new user account in Mutasib. Once you submit your details, the API provisions your account and immediately dispatches a verification email to the address you provided. You must complete email verification before you can log in for the first time.
+
+## Endpoint
+
+```
+POST /api/v1/auth/register
+```
+
+## Request Body
+
+<ParamField body="email" type="string" required>
+  The email address for the new account. Must be a valid email format and unique across all Mutasib users.
+</ParamField>
+
+<ParamField body="username" type="string" required>
+  A display name for the account. Usernames must be unique and can contain letters, numbers, and underscores.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The account password. Use a strong password of at least eight characters. Mutasib stores passwords using a secure one-way hash — they are never stored in plain text.
+</ParamField>
+
+<ParamField body="role" type="string">
+  The role to assign to the new user. Defaults to `shopowner` when omitted. Accepted values are `shopowner` and `cashier`. A `shopowner` has full access to all shop management features; a `cashier` has access limited to point-of-sale operations.
+</ParamField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash curl
+curl --request POST \
+  --url https://api.mutasib.com/api/v1/auth/register \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "email": "sara@example.com",
+    "username": "sara_shop",
+    "password": "S3cur3P@ssw0rd!",
+    "role": "shopowner"
+  }'
+```
+
+```json Request Body
+{
+  "email": "sara@example.com",
+  "username": "sara_shop",
+  "password": "S3cur3P@ssw0rd!",
+  "role": "shopowner"
+}
+```
+
+</CodeGroup>
+
+## Response — 201 Created
+
+A successful registration returns a plain success object confirming that the account was created and the verification email was dispatched.
+
+```json
+{
+  "message": "User registered successfully. Please check your email to verify your account."
+}
+```
+
+## Email Verification
+
+After registration, Mutasib sends a verification link to the email address you provided. The link embeds a short-lived token. To activate your account, make the following request with that token:
+
+```
+POST /api/v1/auth/verify-email?token=<verification_token>
+```
+
+```bash
+curl --request POST \
+  --url 'https://api.mutasib.com/api/v1/auth/verify-email?token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+A `200 OK` response confirms that your email is verified and your account is ready to use.
+
+<Note>
+  You cannot log in until your email address is verified. If the verification email does not arrive within a few minutes, check your spam folder. Token links expire after 24 hours — if yours expires, re-register or contact support to request a new verification email.
+</Note>

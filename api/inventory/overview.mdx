@@ -1,0 +1,209 @@
+---
+title: "Inventory API: Track Stock and Log Movements"
+sidebarTitle: "Inventory"
+description: "List inventory snapshots, adjust stock levels, monitor low-stock products, and view movement history via the Mutasib API."
+---
+
+Mutasib tracks stock automatically — every time you record a sale, the quantity for each sold product decrements in real time. Use the inventory endpoints to view the current state of your stock, make manual adjustments (for purchases, returns, or damage), and audit every stock change through the movement log.
+
+## List Inventory
+
+Fetch the current stock snapshot for every product in a shop. Each entry reflects the live quantity after all sales and manual adjustments.
+
+**`GET /api/v1/shops/{shop_id}/inventory/`**
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/inventory/ \
+  -H "Authorization: Bearer <token>"
+```
+
+**Example response**
+
+```json
+[
+  {
+    "id": 101,
+    "name": "Whole Milk 1L",
+    "barcode": "6281234567890",
+    "stock": 48,
+    "low_stock_threshold": 10,
+    "is_low_stock": false,
+    "unit": "piece",
+    "price": "1.50",
+    "category_name": "Dairy"
+  },
+  {
+    "id": 205,
+    "name": "Bottled Water 500ml",
+    "barcode": "6289876543210",
+    "stock": 7,
+    "low_stock_threshold": 20,
+    "is_low_stock": true,
+    "unit": "piece",
+    "price": "0.75",
+    "category_name": "Beverages"
+  }
+]
+```
+
+Returns an array of [`InventorySnapshotOut`](#inventorysnapshotout-fields) objects.
+
+---
+
+## Adjust Inventory
+
+Apply a manual stock adjustment to a single product. The `adjustment` field is a **delta** — pass a positive number to add stock (e.g. after a purchase delivery) or a negative number to remove it (e.g. for spoilage or damage).
+
+**`PATCH /api/v1/shops/{shop_id}/inventory/{product_id}/`**
+
+### Request body
+
+<ParamField path="adjustment" type="integer">
+  The quantity to add (positive) or remove (negative) from current stock. Defaults to `0`.
+</ParamField>
+<ParamField path="low_stock_threshold" type="integer">
+  Update the threshold at which this product is flagged as low stock. Optional.
+</ParamField>
+<ParamField path="reason" type="string">
+  Why the adjustment is being made. Defaults to `adjustment`. Accepted values:
+
+  | Value | When to use |
+  |---|---|
+  | `adjustment` | Generic manual correction |
+  | `purchase` | Stock received from a supplier |
+  | `return` | Customer or supplier return |
+  | `damage` | Items damaged or expired |
+  | `correction` | Fixing a data entry mistake |
+</ParamField>
+<ParamField path="note" type="string">
+  An optional free-text note attached to this movement record. Defaults to `""`.
+</ParamField>
+
+```bash
+# Add 24 units after a supplier delivery
+curl -X PATCH https://api.mutasib.com/api/v1/shops/42/inventory/101/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adjustment": 24,
+    "reason": "purchase",
+    "note": "Supplier invoice #INV-2024-0881"
+  }'
+```
+
+```bash
+# Remove 3 units for damaged goods
+curl -X PATCH https://api.mutasib.com/api/v1/shops/42/inventory/101/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "adjustment": -3,
+    "reason": "damage",
+    "note": "Broken during shelf restocking"
+  }'
+```
+
+Returns an updated `InventorySnapshotOut` object reflecting the new stock level.
+
+---
+
+## Low Stock List
+
+Retrieve only the products currently at or below their configured `low_stock_threshold`. Use this endpoint to drive reorder workflows or surface alerts on your dashboard.
+
+**`GET /api/v1/shops/{shop_id}/inventory/low-stock/`**
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/inventory/low-stock/ \
+  -H "Authorization: Bearer <token>"
+```
+
+Returns an array of `InventorySnapshotOut` objects where `is_low_stock` is `true`.
+
+---
+
+## Inventory Movements
+
+Every stock change — whether from a sale, a manual adjustment, or an import — is recorded as an `InventoryMovementOut` entry. Use the optional query parameters to filter the log by product or reason.
+
+**`GET /api/v1/shops/{shop_id}/inventory/movements/`**
+
+<ParamField query="product_id" type="integer">
+  Filter movements to a single product.
+</ParamField>
+<ParamField query="reason" type="string">
+  Filter by reason. Accepted values: `sale`, `adjustment`, `purchase`, `return`, `damage`, `correction`.
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/shops/42/inventory/movements/?product_id=101&reason=purchase" \
+  -H "Authorization: Bearer <token>"
+```
+
+### `InventoryMovementOut` fields
+
+<ResponseField name="id" type="integer">
+  Unique movement record ID.
+</ResponseField>
+<ResponseField name="product_id" type="integer">
+  ID of the affected product.
+</ResponseField>
+<ResponseField name="product_name" type="string">
+  Name of the affected product at the time of the movement.
+</ResponseField>
+<ResponseField name="quantity_change" type="integer">
+  The delta applied. Positive means stock increased; negative means stock decreased.
+</ResponseField>
+<ResponseField name="stock_after" type="integer">
+  The stock level immediately after this movement was applied.
+</ResponseField>
+<ResponseField name="reason" type="string">
+  The reason code for the movement (e.g. `sale`, `purchase`, `damage`).
+</ResponseField>
+<ResponseField name="user_name" type="string">
+  Name of the user who triggered the movement.
+</ResponseField>
+<ResponseField name="note" type="string">
+  Free-text note attached to the movement, if any.
+</ResponseField>
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the movement was recorded.
+</ResponseField>
+
+---
+
+## `InventorySnapshotOut` Fields
+
+<ResponseField name="id" type="integer">
+  Product ID.
+</ResponseField>
+<ResponseField name="name" type="string">
+  Product display name.
+</ResponseField>
+<ResponseField name="barcode" type="string">
+  Product barcode (EAN, UPC, or custom), if assigned.
+</ResponseField>
+<ResponseField name="stock" type="integer">
+  Current on-hand quantity.
+</ResponseField>
+<ResponseField name="low_stock_threshold" type="integer">
+  The quantity at or below which `is_low_stock` becomes `true`.
+</ResponseField>
+<ResponseField name="is_low_stock" type="boolean">
+  `true` when `stock <= low_stock_threshold`.
+</ResponseField>
+<ResponseField name="unit" type="string">
+  Unit of measure (e.g. `piece`, `kg`, `litre`).
+</ResponseField>
+<ResponseField name="price" type="string">
+  Current selling price as a decimal string.
+</ResponseField>
+<ResponseField name="category_name" type="string">
+  Name of the product's category, if assigned. May be `null`.
+</ResponseField>
+
+---
+
+<Tip>
+  Set a meaningful `low_stock_threshold` for each product based on your reorder lead time and average daily sales. A product that sells 10 units per day and takes 3 days to restock should have a threshold of at least 30 — otherwise you risk running out before the next delivery arrives. You can pair this with the [AI reorder endpoint](/api/ai/overview) to get suggested order quantities automatically.
+</Tip>

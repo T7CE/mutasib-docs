@@ -1,0 +1,130 @@
+---
+title: "Notifications API: Alerts and In-App Messages"
+sidebarTitle: "Notifications"
+description: "List, count, and mark user notifications as read. In-app alerts for low stock, sales, and system events via the Mutasib API."
+---
+
+Mutasib sends in-app notifications when important events happen in your shop — stock drops below threshold, a new sale is recorded, your subscription renews, or a staff member accepts an invitation. Use the notifications endpoints to fetch, count, and mark alerts as read in your own integrations or dashboards.
+
+## List Notifications
+
+Retrieve all notifications for the authenticated user. Pass `unread_only=true` to surface only unread items — useful for populating a notification badge or feed.
+
+**`GET /api/v1/notifications/`**
+
+<ParamField query="unread_only" type="boolean">
+  When `true`, returns only unread notifications. Defaults to `false` (returns all notifications).
+</ParamField>
+
+```bash
+# All notifications
+curl https://api.mutasib.com/api/v1/notifications/ \
+  -H "Authorization: Bearer <token>"
+
+# Unread notifications only
+curl "https://api.mutasib.com/api/v1/notifications/?unread_only=true" \
+  -H "Authorization: Bearer <token>"
+```
+
+**Example response**
+
+```json
+[
+  {
+    "id": 1042,
+    "type": "low_stock_alert",
+    "title": "Low Stock Alert",
+    "message": "Bottled Water 500ml is running low (7 units remaining, threshold: 20).",
+    "is_read": false,
+    "created_at": "2024-01-15T08:14:33Z"
+  },
+  {
+    "id": 1039,
+    "type": "sale_created",
+    "title": "New Sale Recorded",
+    "message": "A sale of 142.50 DZD was recorded by Ahmed (Cashier).",
+    "is_read": true,
+    "created_at": "2024-01-15T07:50:11Z"
+  }
+]
+```
+
+---
+
+## Unread Count
+
+Fetch a fast count of unread notifications for the authenticated user. Use this to drive notification badge numbers without fetching the full notification list.
+
+**`GET /api/v1/notifications/unread-count`**
+
+```bash
+curl https://api.mutasib.com/api/v1/notifications/unread-count \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response**
+
+```json
+{
+  "unread_count": 5
+}
+```
+
+---
+
+## Mark One Notification as Read
+
+Mark a single notification as read by its ID.
+
+**`POST /api/v1/notifications/{notification_id}/read`**
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/notifications/1042/read \
+  -H "Authorization: Bearer <token>"
+```
+
+Returns `200 OK` with the updated notification object, including `"is_read": true`.
+
+---
+
+## Mark All Notifications as Read
+
+Mark every unread notification for the authenticated user as read in a single request. Useful for a "mark all as read" button in your UI.
+
+**`POST /api/v1/notifications/read-all`**
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/notifications/read-all \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response**
+
+```json
+{
+  "marked_read": 5
+}
+```
+
+The `marked_read` field tells you how many notifications were updated.
+
+---
+
+## Notification Types
+
+Mutasib generates the following notification types. Each appears in the `type` field of a notification object.
+
+| Type | Trigger |
+|---|---|
+| `low_stock_alert` | A product's stock has fallen to or below its `low_stock_threshold`. |
+| `sale_created` | A new sale has been recorded in one of your shops. |
+| `subscription_changed` | Your plan has been upgraded, downgraded, or renewed. |
+| `staff_invited` | A staff member has been invited to your shop. |
+
+Additional types may be added as new platform features are released. Your integration should handle unknown `type` values gracefully rather than failing.
+
+---
+
+## Shop-Level Notification Settings
+
+To configure which notification types are active for your shop — including email report frequency and low-stock alert sensitivity — use the shop notification settings endpoint documented in the [Shops API](/api/shops/notifications). There you can adjust how often low-stock alerts are sent, enable or disable email digests, and set per-event email preferences.

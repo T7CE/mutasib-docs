@@ -1,0 +1,189 @@
+---
+title: "Sales API: Record and Retrieve Shop Transactions"
+sidebarTitle: "Sales"
+description: "Create sales, list transactions, get today's stats, and retrieve individual sales via the Mutasib API."
+---
+
+Every sale you record through Mutasib captures which products were sold, at what price, and by which cashier — and automatically decrements stock for each item in the transaction. Sales are immutable once created; if a correction is needed, contact support rather than attempting to delete or overwrite a record.
+
+## Create a Sale
+
+Send a `POST` request to create a new sale. Mutasib looks up each product by `product_id`, applies the current unit price, calculates the total, and returns a complete `SaleOut` object including a `receipt_token` you can use to display a digital receipt.
+
+**`POST /api/v1/shops/{shop_id}/sales/`**
+
+### Request body
+
+<ParamField path="items" type="array" required>
+  An array of line items to include in the sale. Each element must contain a `product_id` and a `quantity`.
+
+  <Expandable title="item properties">
+    <ParamField path="items[].product_id" type="integer" required>
+      The ID of the product being sold.
+    </ParamField>
+    <ParamField path="items[].quantity" type="integer" required>
+      The number of units sold. Must be greater than `0`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/sales/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "items": [
+      { "product_id": 101, "quantity": 3 },
+      { "product_id": 205, "quantity": 1 }
+    ]
+  }'
+```
+
+### Response — `SaleOut`
+
+<ResponseField name="id" type="integer">
+  Unique identifier for the sale.
+</ResponseField>
+<ResponseField name="shop_id" type="integer">
+  ID of the shop where the sale occurred.
+</ResponseField>
+<ResponseField name="shop_name" type="string">
+  Display name of the shop.
+</ResponseField>
+<ResponseField name="cashier_id" type="integer">
+  ID of the user who processed the sale.
+</ResponseField>
+<ResponseField name="cashier_name" type="string">
+  Full name of the cashier.
+</ResponseField>
+<ResponseField name="items" type="array">
+  Line items included in this sale.
+
+  <Expandable title="SaleItemOut properties">
+    <ResponseField name="product_id" type="integer">
+      ID of the sold product.
+    </ResponseField>
+    <ResponseField name="product_name" type="string">
+      Name of the sold product at time of sale.
+    </ResponseField>
+    <ResponseField name="barcode" type="string">
+      Product barcode, if set.
+    </ResponseField>
+    <ResponseField name="quantity" type="integer">
+      Number of units sold.
+    </ResponseField>
+    <ResponseField name="unit_price" type="number">
+      Price per unit at the time of the sale.
+    </ResponseField>
+    <ResponseField name="total" type="number">
+      `unit_price × quantity` for this line item.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+<ResponseField name="total_amount" type="number">
+  Sum of all line-item totals for the sale.
+</ResponseField>
+<ResponseField name="receipt_token" type="string">
+  Unique token used to access the public digital receipt. See [Digital Receipts](#digital-receipts).
+</ResponseField>
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the sale was recorded.
+</ResponseField>
+
+---
+
+## List Sales
+
+Retrieve a paginated list of sales for a shop, optionally filtered by date range.
+
+**`GET /api/v1/shops/{shop_id}/sales/`**
+
+Provide `date_from` and `date_to` as ISO 8601 date strings (`YYYY-MM-DD`) to narrow results to a specific period. Both parameters are optional; omitting them returns all recorded sales.
+
+<ParamField query="date_from" type="string">
+  Start of the date range, inclusive. Format: `YYYY-MM-DD` (e.g. `2024-01-01`).
+</ParamField>
+<ParamField query="date_to" type="string">
+  End of the date range, inclusive. Format: `YYYY-MM-DD` (e.g. `2024-01-31`).
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/shops/42/sales/?date_from=2024-01-01&date_to=2024-01-31" \
+  -H "Authorization: Bearer <token>"
+```
+
+Returns an array of `SaleOut` objects matching the criteria.
+
+---
+
+## Today's Sales Stats
+
+Fetch a quick summary of all sales recorded today for dashboard display. The response aggregates totals, transaction count, and a running revenue figure since midnight in the shop's local time zone.
+
+**`GET /api/v1/shops/{shop_id}/sales/today`**
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/sales/today \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Sales Statistics
+
+Retrieve aggregate statistics across all time (or a filtered period). This endpoint powers summary cards — total revenue, total transactions, and average order value.
+
+**`GET /api/v1/shops/{shop_id}/sales/stats`**
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/sales/stats \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Get a Single Sale
+
+Retrieve the full detail of one sale by its ID, including all line items and the receipt token.
+
+**`GET /api/v1/shops/{shop_id}/sales/{sale_id}/`**
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/sales/7801/ \
+  -H "Authorization: Bearer <token>"
+```
+
+Returns a single `SaleOut` object.
+
+---
+
+## Digital Receipts
+
+Every sale includes a `receipt_token` — a short, URL-safe string you can embed in a QR code, SMS link, or customer-facing app. The receipt endpoints are **public** and require no authentication, making them safe to share directly with customers.
+
+### View receipt
+
+**`GET /api/v1/public/receipt/{token}`**
+
+```bash
+curl https://api.mutasib.com/api/v1/public/receipt/rcpt_a1b2c3d4e5f6
+```
+
+Returns a `SaleOut` object with full line-item detail.
+
+### Download PDF
+
+**`GET /api/v1/public/receipt/{token}/pdf`**
+
+```bash
+curl -o receipt.pdf \
+  https://api.mutasib.com/api/v1/public/receipt/rcpt_a1b2c3d4e5f6/pdf
+```
+
+Returns the receipt as a binary PDF. Set the `Accept` header to `application/pdf` if your HTTP client requires an explicit content-type hint.
+
+---
+
+<Note>
+  **Deleting sales is not supported.** Sales records are permanent to preserve audit integrity. If you need to correct a mistaken sale — wrong product, wrong quantity, or wrong amount — contact [Mutasib support](mailto:support@mutasib.com) with the sale ID and a brief description of the issue.
+</Note>

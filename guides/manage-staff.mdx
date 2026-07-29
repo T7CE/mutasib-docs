@@ -1,0 +1,207 @@
+---
+title: "Manage Staff and Cashiers in Your Mutasib Shop"
+sidebarTitle: "Staff Management"
+description: "Invite cashiers to your shop, manage active staff members, and revoke access — all through the Mutasib staff and invitations API."
+---
+
+Staff members in Mutasib are cashiers you authorize to process sales on behalf of your shop. Rather than sharing your owner credentials, you send each person a secure invitation token that they accept with their own account. This page walks you through the full lifecycle: creating invitations, accepting them, listing your team, and removing access when needed.
+
+## Cashier limits by plan
+
+The number of active cashiers you can have depends on your subscription plan.
+
+| Plan | Cashier seats |
+|---|---|
+| Free | 0 (shop owner only) |
+| Starter ($7/mo) | 2 cashiers |
+| Pro ($19/mo) | 5 cashiers |
+
+Invitations count against your seat limit once accepted. You can revoke an invitation or remove a staff member at any time to free up a seat.
+
+## Inviting a staff member
+
+Inviting someone to your shop is a three-step process: you create the invitation, share the token with your staff member, and they accept it with their Mutasib account.
+
+<Steps>
+  <Step title="Create the invitation">
+    Send a `POST` request to `/api/v1/shops/{shop_id}/invitations` with the invitee's email address, the role you want to grant, and how long the invitation should remain valid.
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST https://api.mutasib.com/api/v1/shops/42/invitations \
+      -H "Authorization: Bearer <your_token>" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "role": "cashier",
+        "email": "staff@example.com",
+        "expires_in_hours": 72
+      }'
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post(
+        "https://api.mutasib.com/api/v1/shops/42/invitations",
+        headers={"Authorization": "Bearer <your_token>"},
+        json={
+            "role": "cashier",
+            "email": "staff@example.com",
+            "expires_in_hours": 72,
+        },
+    )
+    invitation = response.json()
+    print(invitation["token"])
+    ```
+
+    ```js JavaScript
+    const response = await fetch(
+      "https://api.mutasib.com/api/v1/shops/42/invitations",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer <your_token>",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          role: "cashier",
+          email: "staff@example.com",
+          expires_in_hours: 72,
+        }),
+      }
+    );
+    const invitation = await response.json();
+    console.log(invitation.token);
+    ```
+    </CodeGroup>
+
+    A successful response returns an `InvitationOut` object:
+
+    ```json
+    {
+      "id": "inv_01HXZ3K...",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5c...",
+      "shop_id": 42,
+      "shop_name": "Al-Noor Grocery",
+      "role": "cashier",
+      "email": "staff@example.com",
+      "is_used": false,
+      "is_expired": false,
+      "expires_at": "2024-01-18T10:00:00Z",
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+    ```
+  </Step>
+
+  <Step title="Share the token">
+    Copy the `token` from the response and share it with your staff member — via a link, email, or any messaging channel you prefer. The token is a self-contained credential, so treat it with the same care as a password. You can construct a ready-to-use acceptance URL like:
+
+    ```
+    https://app.mutasib.com/invite/accept?token=eyJhbGciOiJIUzI1NiIsInR5c...
+    ```
+
+    Alternatively, pass the raw token to your staff member and have them submit it through the API directly.
+  </Step>
+
+  <Step title="Staff member accepts the invitation">
+    Once your staff member is logged in to their Mutasib account, they accept the invitation by posting the token to the public accept endpoint.
+
+    <CodeGroup>
+    ```bash cURL
+    curl -X POST https://api.mutasib.com/api/v1/shops/invite/accept \
+      -H "Authorization: Bearer <staff_token>" \
+      -H "Content-Type: application/json" \
+      -d '{"token": "eyJhbGciOiJIUzI1NiIsInR5c..."}'
+    ```
+
+    ```python Python
+    response = requests.post(
+        "https://api.mutasib.com/api/v1/shops/invite/accept",
+        headers={"Authorization": "Bearer <staff_token>"},
+        json={"token": "eyJhbGciOiJIUzI1NiIsInR5c..."},
+    )
+    staff_member = response.json()
+    ```
+    </CodeGroup>
+
+    On success, the server returns a `StaffMemberOut` object confirming the new relationship:
+
+    ```json
+    {
+      "id": "stf_01HY...",
+      "user_id": "usr_09AB...",
+      "email": "staff@example.com",
+      "username": "sara_k",
+      "role": "cashier",
+      "joined_at": "2024-01-15T10:05:00Z"
+    }
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Your staff member must have an existing Mutasib account before they can accept an invitation. If they don't have one yet, ask them to sign up at [app.mutasib.com](https://app.mutasib.com) first.
+</Note>
+
+## Looking up an invitation
+
+Before presenting an acceptance form, you can look up the details of an invitation using just the token — no authentication required. This is useful for building custom accept flows or validating a token client-side before prompting a login.
+
+```bash
+curl "https://api.mutasib.com/api/v1/shops/invite/lookup/?token=eyJhbGciOiJIUzI1NiIsInR5c..."
+```
+
+The response returns the same `InvitationOut` shape, including `is_used` and `is_expired` flags so you can show a helpful message if the link is no longer valid.
+
+## Listing your staff
+
+To see all active staff members in a shop, call the staff list endpoint. Only the shop owner can access this.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/staff \
+  -H "Authorization: Bearer <your_token>"
+```
+
+The response is an array of `StaffMemberOut` objects, one per active cashier.
+
+## Removing a staff member
+
+To revoke a cashier's access immediately, send a `DELETE` request with their staff record ID. The staff member loses access to the shop's POS and data as soon as the request succeeds.
+
+```bash
+curl -X DELETE https://api.mutasib.com/api/v1/shops/42/staff/stf_01HY... \
+  -H "Authorization: Bearer <your_token>"
+```
+
+A `204 No Content` response confirms the removal.
+
+## Managing pending invitations
+
+### List all invitations
+
+You can see all outstanding invitations for a shop — including ones that have been used or expired — with a `GET` request.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/invitations \
+  -H "Authorization: Bearer <your_token>"
+```
+
+### Revoke an invitation
+
+If you need to cancel an invitation before it is accepted, send a `DELETE` request with the invitation ID.
+
+```bash
+curl -X DELETE https://api.mutasib.com/api/v1/shops/42/invitations/inv_01HXZ3K... \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Revoking an invitation does not affect staff members who have already accepted it — use the [remove staff](#removing-a-staff-member) endpoint for that.
+
+## Viewing shops you belong to as a cashier
+
+If you are a cashier yourself (rather than a shop owner), you can retrieve the list of shops where you have an active staff role.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/staff \
+  -H "Authorization: Bearer <your_token>"
+```

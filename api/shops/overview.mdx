@@ -1,0 +1,321 @@
+---
+title: "Shop Management API Endpoints"
+sidebarTitle: "Shops"
+description: "Create, list, update, activate/deactivate, and manage all your shops through the Mutasib REST API using JWT Bearer authentication."
+---
+
+The Shops API is the foundation of Mutasib. Every product, staff member, and transaction belongs to a shop, so you'll typically create or retrieve a shop before working with any other resource. All endpoints require a valid JWT Bearer token in the `Authorization` header unless stated otherwise.
+
+---
+
+## Create a shop
+
+<br />
+
+`POST /api/v1/shops/`
+
+Creates a new shop owned by the authenticated user. The shop starts in an inactive, unapproved state and is assigned the `free` plan by default.
+
+### Request body
+
+<ParamField body="name" type="string" required>
+  The display name of your shop. Must be unique within your account.
+</ParamField>
+
+<ParamField body="address" type="string" required>
+  The physical street address of the shop.
+</ParamField>
+
+<ParamField body="category" type="string" required>
+  The business category (e.g., `"grocery"`, `"pharmacy"`, `"electronics"`).
+</ParamField>
+
+<ParamField body="description" type="string" default='""'>
+  A short description of the shop shown to customers.
+</ParamField>
+
+<ParamField body="phone_number" type="string" default='""'>
+  Contact phone number for the shop.
+</ParamField>
+
+<ParamField body="opening_hours" type="object">
+  A map of day names to open/close times. See the [Opening hours format](#opening-hours-format) section below for the expected structure.
+</ParamField>
+
+<ParamField body="latitude" type="float | null">
+  Geographic latitude for map display. Pass `null` to omit.
+</ParamField>
+
+<ParamField body="longitude" type="float | null">
+  Geographic longitude for map display. Pass `null` to omit.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/ \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Corner Grocery",
+    "address": "12 King Fahd Rd, Riyadh",
+    "category": "grocery",
+    "description": "Fresh produce and daily essentials.",
+    "phone_number": "+966501234567",
+    "latitude": 24.7136,
+    "longitude": 46.6753,
+    "opening_hours": {
+      "monday":    { "open": "08:00", "close": "22:00" },
+      "tuesday":   { "open": "08:00", "close": "22:00" },
+      "friday":    { "open": "14:00", "close": "23:00" },
+      "saturday":  { "open": "08:00", "close": "23:00" }
+    }
+  }'
+```
+
+Returns a `201 Created` with the new [ShopOut](#shopout-response-fields) object.
+
+---
+
+## List my shops
+
+<br />
+
+`GET /api/v1/shops/mine`
+
+Returns an array of all shops owned by the authenticated user. The list includes both active and inactive shops, ordered by creation date descending.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/mine \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns a `200 OK` with an array of [ShopOut](#shopout-response-fields) objects.
+
+---
+
+## Get a shop
+
+<br />
+
+`GET /api/v1/shops/{shop_id}`
+
+Retrieves a single shop by its numeric ID. You must be the owner of the shop or an authorized staff member.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42 \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns a `200 OK` with a single [ShopOut](#shopout-response-fields) object, or `404 Not Found` if the shop does not exist or you do not have access.
+
+---
+
+## Update a shop
+
+<br />
+
+`PATCH /api/v1/shops/{shop_id}`
+
+Partially updates one or more fields on an existing shop. Only the fields you include in the request body are changed — all other fields retain their current values.
+
+### Request body
+
+<ParamField body="name" type="string">
+  New display name for the shop.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated shop description.
+</ParamField>
+
+<ParamField body="address" type="string">
+  Updated physical address.
+</ParamField>
+
+<ParamField body="category" type="string">
+  Updated business category.
+</ParamField>
+
+<ParamField body="phone_number" type="string">
+  Updated contact phone number.
+</ParamField>
+
+<ParamField body="opening_hours" type="object">
+  Replacement opening hours object. The entire `opening_hours` map is replaced on update — send all days you want to keep.
+</ParamField>
+
+<ParamField body="is_active" type="boolean">
+  Set to `false` to deactivate the shop, or `true` to reactivate it. You can also use the dedicated [activate/deactivate](#activate--deactivate-a-shop) endpoints.
+</ParamField>
+
+<ParamField body="latitude" type="float | null">
+  Updated geographic latitude.
+</ParamField>
+
+<ParamField body="longitude" type="float | null">
+  Updated geographic longitude.
+</ParamField>
+
+```bash
+curl -X PATCH https://api.mutasib.com/api/v1/shops/42 \
+  -H "Authorization: Bearer <your_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Now open on Fridays!",
+    "phone_number": "+966509876543"
+  }'
+```
+
+Returns a `200 OK` with the updated [ShopOut](#shopout-response-fields) object.
+
+---
+
+## Delete a shop
+
+<br />
+
+`DELETE /api/v1/shops/{shop_id}`
+
+Permanently deletes the shop and all associated data, including products, categories, and staff memberships. This action cannot be undone.
+
+```bash
+curl -X DELETE https://api.mutasib.com/api/v1/shops/42 \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `204 No Content` on success. Returns `404 Not Found` if the shop does not exist or you are not the owner.
+
+<Warning>
+  Deleting a shop is irreversible. All products, categories, staff records, and transaction history associated with the shop will be permanently removed.
+</Warning>
+
+---
+
+## Activate / deactivate a shop
+
+Use these dedicated endpoints to toggle a shop's active status without sending a full PATCH request.
+
+### Activate
+
+`POST /api/v1/shops/{shop_id}/activate`
+
+Sets `is_active` to `true`, making the shop operational.
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/activate \
+  -H "Authorization: Bearer <your_token>"
+```
+
+### Deactivate
+
+`POST /api/v1/shops/{shop_id}/deactivate`
+
+Sets `is_active` to `false`, suspending the shop without deleting any data.
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/deactivate \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Both endpoints return `200 OK` with the updated [ShopOut](#shopout-response-fields) object.
+
+---
+
+## Opening hours format
+
+The `opening_hours` field is a JSON object where each key is a lowercase day name and the value is an object with `open` and `close` times in 24-hour `HH:MM` format. Omitting a day means the shop is closed on that day.
+
+```json
+{
+  "monday":    { "open": "09:00", "close": "21:00" },
+  "tuesday":   { "open": "09:00", "close": "21:00" },
+  "wednesday": { "open": "09:00", "close": "21:00" },
+  "thursday":  { "open": "09:00", "close": "21:00" },
+  "friday":    { "open": "14:00", "close": "23:00" },
+  "saturday":  { "open": "09:00", "close": "23:00" }
+}
+```
+
+Valid day keys are: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`, `sunday`.
+
+---
+
+## ShopOut response fields
+
+Every shop endpoint returns a ShopOut object with the following fields.
+
+<ResponseField name="id" type="integer">
+  Unique numeric identifier for the shop.
+</ResponseField>
+
+<ResponseField name="owner_id" type="integer">
+  The user ID of the shop owner.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Display name of the shop.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  Short description of the shop.
+</ResponseField>
+
+<ResponseField name="address" type="string">
+  Physical address of the shop.
+</ResponseField>
+
+<ResponseField name="category" type="string">
+  Business category of the shop.
+</ResponseField>
+
+<ResponseField name="phone_number" type="string">
+  Contact phone number.
+</ResponseField>
+
+<ResponseField name="opening_hours" type="object">
+  Map of day names to open/close time pairs. See [Opening hours format](#opening-hours-format).
+</ResponseField>
+
+<ResponseField name="latitude" type="float | null">
+  Geographic latitude, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="longitude" type="float | null">
+  Geographic longitude, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="is_active" type="boolean">
+  Whether the shop is currently operational.
+</ResponseField>
+
+<ResponseField name="is_approved" type="boolean">
+  Whether the shop has been approved by Mutasib. Newly created shops start as unapproved.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the shop was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of the most recent update.
+</ResponseField>
+
+<ResponseField name="plan" type="string">
+  The shop's current subscription plan. One of `"free"`, `"starter"`, or `"pro"`. Defaults to `"free"`.
+</ResponseField>
+
+<ResponseField name="plan_features" type="object">
+  A map of feature flags and limits enabled by the current plan.
+  <Expandable title="properties">
+    <ResponseField name="*" type="any">
+      Feature keys vary by plan. Common keys include `max_cashiers`, `low_stock_alerts`, `email_reports`, and `public_storefront`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="max_cashiers" type="integer">
+  Maximum number of cashier staff members allowed. Defaults to `1` on the free plan.
+</ResponseField>
+
+<ResponseField name="is_visible_in_search" type="boolean">
+  Whether the shop appears in public search results on the Mutasib marketplace.
+</ResponseField>

@@ -1,0 +1,113 @@
+---
+title: "Reports API: Export Sales and Inventory Data"
+sidebarTitle: "Reports"
+description: "Export sales and inventory reports as JSON, CSV, or PDF. Schedule email reports for automated delivery via the Mutasib API."
+---
+
+Reports let you export shop data in machine-readable or human-readable formats for accounting, auditing, or sharing with stakeholders. You can pull a sales report for any date range, export a full inventory snapshot, and trigger one-time email delivery of reports directly to the shop owner.
+
+<Note>
+  **PDF and CSV export** formats, as well as **email reports**, are **Pro plan** features. Shops on the Free and Starter plans can access JSON-format reports only.
+</Note>
+
+## Sales Report
+
+Export all sales within a date range. The response format depends on the `format` parameter you provide.
+
+**`GET /api/v1/shops/{shop_id}/reports/sales`**
+
+<ParamField query="date_from" type="string">
+  Start of the reporting period, inclusive. ISO 8601 date string (e.g. `2024-01-01`).
+</ParamField>
+<ParamField query="date_to" type="string">
+  End of the reporting period, inclusive. ISO 8601 date string (e.g. `2024-01-31`).
+</ParamField>
+<ParamField query="format" type="string">
+  Output format for the report. Accepted values: `json` (default), `csv`, `pdf`.
+</ParamField>
+
+```bash
+# JSON report for January 2024
+curl "https://api.mutasib.com/api/v1/shops/42/reports/sales?date_from=2024-01-01&date_to=2024-01-31&format=json" \
+  -H "Authorization: Bearer <token>"
+```
+
+```bash
+# CSV download for the same period
+curl -o sales-january-2024.csv \
+  "https://api.mutasib.com/api/v1/shops/42/reports/sales?date_from=2024-01-01&date_to=2024-01-31&format=csv" \
+  -H "Authorization: Bearer <token>"
+```
+
+```bash
+# PDF download
+curl -o sales-january-2024.pdf \
+  "https://api.mutasib.com/api/v1/shops/42/reports/sales?date_from=2024-01-01&date_to=2024-01-31&format=pdf" \
+  -H "Authorization: Bearer <token>"
+```
+
+For `json`, the response body is an array of `SaleOut` objects. For `csv` and `pdf`, the response is a binary file with the appropriate `Content-Type` header (`text/csv` or `application/pdf`).
+
+---
+
+## Inventory Report
+
+Export a full snapshot of current inventory — every product with its stock level, price, and category. Useful for stocktaking and auditing.
+
+**`GET /api/v1/shops/{shop_id}/reports/inventory`**
+
+<ParamField query="format" type="string">
+  Output format. Accepted values: `json` (default), `csv`, `pdf`.
+</ParamField>
+
+```bash
+# JSON inventory snapshot
+curl "https://api.mutasib.com/api/v1/shops/42/reports/inventory?format=json" \
+  -H "Authorization: Bearer <token>"
+```
+
+```bash
+# CSV for spreadsheet import
+curl -o inventory-snapshot.csv \
+  "https://api.mutasib.com/api/v1/shops/42/reports/inventory?format=csv" \
+  -H "Authorization: Bearer <token>"
+```
+
+For `json`, the response is an array of `InventorySnapshotOut` objects. See [Inventory API](/api/inventory/overview) for field definitions.
+
+---
+
+## Email Report
+
+Trigger a one-time report email to the shop owner's registered email address. The email includes a summary of recent sales and a link to download the full report from the Mutasib dashboard.
+
+**`POST /api/v1/shops/{shop_id}/reports/email/`**
+
+No request body is required. The report covers the past 30 days by default.
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/reports/email/ \
+  -H "Authorization: Bearer <token>"
+```
+
+**Response**
+
+```json
+{
+  "message": "Report email queued successfully. It will arrive within a few minutes."
+}
+```
+
+The email is queued asynchronously and typically arrives within one to two minutes. The shop owner must have a verified email address on their account for delivery to succeed.
+
+---
+
+<Tip>
+  You can automate daily report delivery by calling the email report endpoint from a scheduled job. Set up a cron task that runs each morning and posts to `/api/v1/shops/{shop_id}/reports/email/` using a long-lived API token. This gives your team a fresh report in their inbox every day without any manual effort.
+
+  ```bash
+  # Example cron entry — runs at 7:00 AM every day
+  0 7 * * * curl -s -X POST https://api.mutasib.com/api/v1/shops/42/reports/email/ \
+    -H "Authorization: Bearer $MUTASIB_TOKEN"
+  ```
+</Tip>

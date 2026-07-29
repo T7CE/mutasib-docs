@@ -1,0 +1,161 @@
+---
+title: "Products, Categories, and Inventory in Mutasib"
+sidebarTitle: "Products"
+description: "Products are the items your shop sells. Learn about the data model, custom categories, barcode lookup, visibility controls, and OpenFood integration for global products."
+---
+
+Products are the items your shop sells, and every product belongs to exactly one shop. Each product record tracks not just the name and price, but also cost, stock level, barcode, unit of measure, and visibility to customers. Whether you're running a small bakery or a large electronics store, the product model gives you the flexibility to represent your catalog accurately.
+
+## Product Data Model
+
+The table below covers every key field in the `ProductOut` schema returned by the API.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string (UUID) | Unique product identifier |
+| `shop_id` | string (UUID) | The shop this product belongs to |
+| `name` | string | Display name of the product |
+| `description` | string \| null | Optional longer description |
+| `barcode` | string \| null | EAN, UPC, or any custom barcode |
+| `price` | number | Selling price (what customers pay) |
+| `cost` | number \| null | Purchase/production cost (used for margin analytics) |
+| `stock` | integer | Current quantity in stock |
+| `low_stock_threshold` | integer | Alert threshold — stock at or below this triggers a low-stock flag |
+| `unit` | string | Unit of measure: `piece`, `kg`, `liter`, `gram`, `meter`, etc. |
+| `is_active` | boolean | Soft-delete flag — inactive products are hidden from all views |
+| `is_public` | boolean | Whether the product is visible in public customer search |
+| `category_id` | string (UUID) \| null | ID of the assigned category |
+| `category_name` | string \| null | Resolved name of the assigned category |
+| `images` | array | List of image URLs attached to the product |
+
+<Tip>
+  Use the `cost` field even if you don't plan to expose it — Mutasib's analytics engine uses the cost-vs-price spread to calculate your gross margin automatically.
+</Tip>
+
+## Categories
+
+Mutasib gives you two ways to categorize products: your own **custom categories** scoped to your shop, and a shared **preset category tree** maintained by Mutasib that you can reuse without any setup.
+
+### Custom Categories
+
+Custom categories are created per shop and let you organize products in a way that matches your own business logic. Categories support nesting via `parent_id`, so you can build hierarchies like **Beverages → Cold Drinks → Juices**.
+
+```bash
+# Create a top-level category
+curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/categories/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Beverages", "parent_id": null }'
+
+# Create a nested sub-category
+curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/categories/ \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "name": "Cold Drinks", "parent_id": "<beverages-category-id>" }'
+```
+
+### Preset System Categories
+
+Mutasib provides a global preset category tree you can reference without creating your own. Retrieve the full tree with:
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/preset-categories/ \
+  -H "Authorization: Bearer <token>"
+```
+
+The response is a nested tree structure where each node has an `id`, `name`, and optional `children` array. Assign a preset category to a product by passing its `id` as the `category_id` when creating or updating a product.
+
+## Product Visibility
+
+Product visibility controls which items appear in the public customer-facing search. By default, new products are private (`is_public: false`) so you can set everything up before going live.
+
+The number of products you can make public depends on your plan:
+
+| Plan | Max public products |
+|---|---|
+| Free | 0 |
+| Starter | 100 |
+| Pro | 1,000 |
+
+<Warning>
+  On the Free plan, all products are private regardless of the `is_public` flag. Upgrade to Starter or Pro to enable public product visibility.
+</Warning>
+
+### Toggling Visibility
+
+You can change a single product's visibility or update many products at once with the batch endpoint.
+
+<Tabs>
+  <Tab title="Single product">
+    Toggle one product between public and private. The endpoint flips the current state automatically.
+
+    ```bash
+    curl -X POST \
+      https://api.mutasib.com/api/v1/shops/{shop_id}/products/{product_id}/toggle-public \
+      -H "Authorization: Bearer <token>"
+    ```
+  </Tab>
+  <Tab title="Batch update">
+    Set visibility for multiple products in a single request by passing an array of product IDs and the desired state.
+
+    ```bash
+    curl -X POST \
+      https://api.mutasib.com/api/v1/shops/{shop_id}/products/batch-visibility \
+      -H "Authorization: Bearer <token>" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "product_ids": ["<id-1>", "<id-2>", "<id-3>"],
+        "is_public": true
+      }'
+    ```
+  </Tab>
+</Tabs>
+
+## Barcode Lookup
+
+Mutasib supports two barcode lookup paths: one scoped to your shop, and one that queries the global OpenFood database.
+
+### Lookup Within Your Shop
+
+Find a product in your shop's catalog by scanning its barcode. This is the endpoint used by the POS screen when a cashier scans an item.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/{shop_id}/products/barcode/{barcode}/ \
+  -H "Authorization: Bearer <token>"
+```
+
+If the barcode matches a product in your shop, the full `ProductOut` object is returned. If no match is found, the API returns a `404`.
+
+### Global OpenFood Database
+
+If a scanned barcode doesn't exist in your shop yet, you can look it up in the OpenFood global database to pre-fill product details before creating a new record.
+
+```bash
+curl https://api.mutasib.com/api/v1/products/barcode/{barcode} \
+  -H "Authorization: Bearer <token>"
+```
+
+The response includes publicly available product metadata such as name, brand, and images sourced from OpenFood contributors worldwide. You can use this data to bootstrap a new product record rather than filling in every field manually.
+
+<Info>
+  The OpenFood lookup is read-only — it never creates a product in your shop automatically. You still need to call `POST /api/v1/shops/{shop_id}/products/` with the returned data to add the item to your catalog.
+</Info>
+
+## API Endpoints
+
+Below is a full reference of the product-related endpoints available in the API.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/shops/{shop_id}/products/` | Create a new product |
+| `GET` | `/api/v1/shops/{shop_id}/products/` | List all products in the shop |
+| `GET` | `/api/v1/shops/{shop_id}/products/{product_id}` | Get a single product by ID |
+| `PATCH` | `/api/v1/shops/{shop_id}/products/{product_id}` | Update product fields |
+| `DELETE` | `/api/v1/shops/{shop_id}/products/{product_id}` | Soft-delete a product (`is_active → false`) |
+| `POST` | `/api/v1/shops/{shop_id}/products/{product_id}/toggle-public` | Toggle public visibility |
+| `POST` | `/api/v1/shops/{shop_id}/products/batch-visibility` | Batch-update visibility for multiple products |
+| `GET` | `/api/v1/shops/{shop_id}/products/barcode/{barcode}/` | Find a product by barcode within your shop |
+| `GET` | `/api/v1/products/barcode/{barcode}` | Look up a barcode in the global OpenFood database |
+| `POST` | `/api/v1/shops/{shop_id}/categories/` | Create a custom category |
+| `GET` | `/api/v1/shops/{shop_id}/categories/` | List your shop's custom categories |
+| `GET` | `/api/v1/shops/preset-categories/` | Retrieve the global preset category tree |
