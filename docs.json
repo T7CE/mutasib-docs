@@ -79,7 +79,8 @@
               "api/sales/overview",
               "api/inventory/overview",
               "api/sales/credit-notes",
-              "api/analytics/overview"
+              "api/analytics/overview",
+              "api/ai/overview"
             ]
           },
           {

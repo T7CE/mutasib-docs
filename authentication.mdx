@@ -62,11 +62,19 @@ API tokens are restricted to a fixed set of path prefixes. Requests to any path 
 | Prefix | What's accessible |
 | --- | --- |
 | `/api/v1/shops/` | Shop read/update, products, categories, sales, inventory, and suppliers scoped to a shop |
+| `/api/v1/shops/{id}/ai/predict` | AI demand prediction (Pro plan only) |
+| `/api/v1/shops/{id}/ai/reorder` | AI reorder suggestions (Pro plan only) |
 | `/api/v1/products/` | OpenFood Facts barcode lookup, search, and category browsing |
 | `/api/v1/credit-notes/` | Shop credit notes |
 | `/api/v1/public/` | Public shop and product search, nearby shops, and receipts |
 
-Everything else returns `404 Not Found`.
+Everything else returns `404 Not Found`. All other `/ai/*` sub-paths are outside the API scope.
+
+## Plan gating
+
+Some features are available only on specific plans. If your token belongs to a shop that doesn't include a feature (for example, an AI endpoint on a Starter plan), the API returns `403 Forbidden` with a `detail` message explaining the required plan. The same gating applies inside the Mutasib dashboard, so a user who cannot reach a feature there also cannot reach it through the API.
+
+Pro-only features currently include AI demand prediction, AI reorder suggestions, supplier management, and credit notes. Inspect the `plan_features` object on the shop response to detect available capabilities at runtime.
 
 ## HTTP error codes
 

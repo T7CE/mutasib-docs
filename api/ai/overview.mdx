@@ -1,0 +1,102 @@
+---
+title: "AI API: Demand Prediction and Reorder Suggestions"
+sidebarTitle: "AI Insights"
+description: "Use Mutasib's AI to predict product demand and get reorder suggestions with confidence scores and reasoning. Pro plan only."
+---
+
+Mutasib's AI endpoints turn your sales history into forward-looking guidance. Ask for a demand forecast on any product and you'll get an expected sales volume with a confidence score, or ask for a reorder recommendation and you'll get a suggested quantity, an urgency level, and a plain-language explanation of the reasoning.
+
+<Note>
+  **Pro plan only.** AI endpoints are available exclusively to shops on the Pro plan. Requests from Free or Starter shops return `403 Forbidden`. The same restriction applies inside the Mutasib dashboard: users on lower tiers cannot access AI features from either surface.
+</Note>
+
+## Predict demand
+
+Returns an AI-generated demand forecast for a single product, based on the shop's historical sales.
+
+**`POST /api/v1/shops/{shop_id}/ai/predict`**
+
+### Request body
+
+<ParamField body="product_id" type="integer" required>
+  ID of the product to forecast. Must belong to the shop identified in the path.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/ai/predict \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "product_id": 301 }'
+```
+
+### Response
+
+<ResponseField name="product_id" type="integer">
+  ID of the product this prediction applies to.
+</ResponseField>
+
+<ResponseField name="expected_sales_volume" type="number">
+  Forecasted units of this product expected to sell in the upcoming period.
+</ResponseField>
+
+<ResponseField name="confidence_score" type="number">
+  Model confidence in the forecast, expressed as a value between `0` and `1`.
+</ResponseField>
+
+<ResponseField name="reasoning" type="string">
+  Human-readable explanation of how the forecast was derived (e.g. recent sales velocity, seasonality, trend direction).
+</ResponseField>
+
+---
+
+## Reorder suggestion
+
+Returns an AI-powered reorder recommendation for a single product, including how much to order and how urgently.
+
+**`POST /api/v1/shops/{shop_id}/ai/reorder`**
+
+### Request body
+
+<ParamField body="product_id" type="integer" required>
+  ID of the product to evaluate. Must belong to the shop identified in the path.
+</ParamField>
+
+```bash
+curl -X POST https://api.mutasib.com/api/v1/shops/42/ai/reorder \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "product_id": 301 }'
+```
+
+### Response
+
+<ResponseField name="product_id" type="integer">
+  ID of the product this suggestion applies to.
+</ResponseField>
+
+<ResponseField name="suggested_quantity" type="integer">
+  Recommended number of units to reorder from your supplier.
+</ResponseField>
+
+<ResponseField name="urgency" type="string">
+  Urgency level of the reorder. One of `low`, `medium`, or `high`.
+</ResponseField>
+
+<ResponseField name="reasoning" type="string">
+  Human-readable explanation combining current stock, sales velocity, and low-stock threshold.
+</ResponseField>
+
+---
+
+## Plan gating
+
+Some Mutasib features are limited to specific plans. When your token belongs to a shop that doesn't include a feature, the API returns `403 Forbidden` with a `detail` message explaining the required plan. This mirrors the dashboard exactly: a user who can't reach a feature in the dashboard also can't reach it through the API.
+
+Pro-only features include:
+
+- AI demand prediction (`POST /api/v1/shops/{shop_id}/ai/predict`)
+- AI reorder suggestions (`POST /api/v1/shops/{shop_id}/ai/reorder`)
+- Supplier management (`/api/v1/shops/{shop_id}/suppliers`)
+- Credit notes (`/api/v1/credit-notes/{shop_id}/`)
+
+Check the `plan_features` object on the shop response to detect available capabilities at runtime instead of hard-coding plan names.
