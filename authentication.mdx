@@ -4,7 +4,7 @@ sidebarTitle: "Authentication"
 description: "Mutasib uses API tokens for all API access. Generate one from your dashboard and pass it as an Authorization: Bearer header on every request."
 ---
 
-Mutasib secures every API request with a long-lived **API token**. Generate a token from your [Mutasib dashboard](https://mutasib.com/dashboard) and attach it to every request as an `Authorization: Bearer` header. All programmatic access to the API uses API tokens.
+Mutasib secures every API request with an **API token**. Generate a token from your [Mutasib dashboard](https://mutasib.com/dashboard), pick an expiration of 30, 60, or 90 days, and attach it to every request as an `Authorization: Bearer` header. All programmatic access to the API uses API tokens.
 
 <Note>
   API tokens are not available on a free trial. An active paid plan is required to create and use them.
@@ -14,8 +14,9 @@ Mutasib secures every API request with a long-lived **API token**. Generate a to
 
 1. Sign in to your [Mutasib dashboard](https://mutasib.com/dashboard).
 2. Open the API tokens section.
-3. Create a new token and copy it immediately. Tokens are shown only once at creation time.
+3. Create a new token, choose an expiration of **30, 60, or 90 days**, and copy the token immediately. Tokens are shown only once at creation time.
 4. Store the token in a secure secret store (encrypted keystore, environment variable, or secrets manager).
+5. Revoke a token anytime from the same section of the dashboard. Once a token expires or is revoked, requests using it return `401 Unauthorized`.
 
 ## Using your token
 
@@ -73,7 +74,7 @@ When authentication fails, the API returns a standard HTTP error code. The table
 
 | Code | Name | Meaning | What to do |
 | --- | --- | --- | --- |
-| `401` | Unauthorized | No token was provided, the token is invalid, or the token has been revoked. | Include a valid `Authorization: Bearer` header with an active API token. Generate a new token from the dashboard if needed. |
+| `401` | Unauthorized | No token was provided, the token is invalid, expired, or has been revoked. | Include a valid `Authorization: Bearer` header with an active API token. Generate a new token from the dashboard if the current one has expired or been revoked. |
 | `403` | Forbidden | The request was authenticated, but the token does not have permission to perform this action. | Verify that the account owning the token has the required permissions for the endpoint you are calling. |
 | `404` | Not Found | The path is outside the API token scope (see the allowlist above) or the resource does not exist. | Check that you are calling one of the allowed prefixes and that the resource ID is correct. |
 | `422` | Unprocessable Entity | The request was well-formed but failed server-side validation. | Read the `detail` array in the response body. Each entry identifies the field and the reason for rejection. |

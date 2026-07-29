@@ -14,7 +14,7 @@ Mutasib is an all-in-one shop management platform built for retailers, boutique 
 
 <CardGroup cols={2}>
   <Card title="Authentication" icon="lock">
-    Authenticate every request with a long-lived API token generated from your Mutasib dashboard.
+    Authenticate every request with an API token generated from your Mutasib dashboard. Choose a 30-, 60-, or 90-day expiration and revoke anytime.
   </Card>
 
   <Card title="Shop Details" icon="store">
@@ -60,7 +60,7 @@ The Mutasib API uses **API tokens** for authentication. Generate a token from yo
 Authorization: Bearer YOUR_API_TOKEN
 ```
 
-API tokens are long-lived. Never include your token as a query parameter, and never commit it to source control — treat it like a password. If a token is compromised, revoke it from the dashboard and generate a new one.
+API tokens expire after 30, 60, or 90 days depending on the expiration you pick when creating them, and you can revoke them anytime from the dashboard. Never include your token as a query parameter, and never commit it to source control, treat it like a password. If a token is compromised, revoke it from the dashboard and generate a new one.
 
 <Note>
   API tokens are not available on a free trial. An active paid plan is required to create and use them.

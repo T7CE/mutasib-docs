@@ -12,7 +12,7 @@ This guide walks you through the essential steps to go from zero to a working Mu
 
 <Steps>
   <Step title="Generate an API token">
-    Sign in to your [Mutasib dashboard](https://mutasib.com/dashboard) and create a new API token. Copy the token immediately — it is shown only once at creation time. Store it in a secure secret store such as an environment variable or a secrets manager.
+    Sign in to your [Mutasib dashboard](https://mutasib.com/dashboard) and create a new API token. Choose an expiration of 30, 60, or 90 days, then copy the token immediately, it is shown only once at creation time. Store it in a secure secret store such as an environment variable or a secrets manager. You can revoke the token anytime from the dashboard.
 
     Pass the token in the `Authorization` header on every request:
 
