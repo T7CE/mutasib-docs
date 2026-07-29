@@ -1,7 +1,7 @@
 ---
-title: "Two-Factor Authentication Setup and Usage"
+title: "Two-Factor Authentication Setup and Management — Mutasib"
 sidebarTitle: "Two-Factor Auth"
-description: "Set up TOTP or email-based 2FA, enable/disable it, and complete 2FA login flows in the Mutasib API."
+description: "Set up TOTP or email-based 2FA on your Mutasib account, check its status, disable it, and complete 2FA-gated login flows via the API."
 ---
 
 Mutasib supports two types of two-factor authentication (2FA): **TOTP** (Time-based One-Time Password), which works with any standards-compliant authenticator app such as Google Authenticator or Authy, and **email-based codes**, which send a one-time code to your registered email address. You can enable one method at a time per account.
@@ -69,7 +69,7 @@ curl --request POST \
 
 ### Step 3 — Login with TOTP
 
-Once TOTP is enabled, every login requires the current code from your authenticator app. Use the dedicated 2FA login endpoint instead of the standard login:
+Once TOTP is enabled, every login requires the current code from your authenticator app. Use the dedicated 2FA login endpoint instead of the standard login.
 
 ```
 POST /api/v1/auth/login-2fa
@@ -110,7 +110,7 @@ curl --request POST \
 
 ### Disable TOTP
 
-To turn off TOTP 2FA, submit a valid code from your authenticator app to confirm intent:
+To turn off TOTP 2FA, submit a valid code from your authenticator app to confirm intent.
 
 ```
 POST /api/v1/auth/2fa/disable
@@ -146,11 +146,11 @@ Email 2FA sends a one-time code to your registered email address each time you l
 
 ### Enable Email 2FA
 
+Call the enable endpoint with a valid Bearer token. No request body is needed.
+
 ```
 POST /api/v1/auth/2fa/email/enable
 ```
-
-This endpoint requires a valid Bearer token. No request body is needed.
 
 ```bash
 curl --request POST \
@@ -167,6 +167,8 @@ curl --request POST \
 ```
 
 ### Disable Email 2FA
+
+Call the disable endpoint with a valid Bearer token. No request body is needed.
 
 ```
 POST /api/v1/auth/2fa/email/disable
@@ -246,7 +248,7 @@ curl --request POST \
 
 ## Check 2FA Status
 
-Retrieve the current 2FA configuration for the authenticated user at any time:
+Retrieve the current 2FA configuration for the authenticated user at any time. This endpoint requires a valid Bearer token.
 
 ```
 GET /api/v1/auth/2fa/status

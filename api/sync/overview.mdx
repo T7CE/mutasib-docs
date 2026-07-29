@@ -1,7 +1,7 @@
 ---
 title: "Offline Sync API: Batch Operations and Replay Protection"
 sidebarTitle: "Sync"
-description: "Sync batches of offline operations securely using HMAC-SHA256 signed requests with idempotent client IDs via the Mutasib API."
+description: "Submit signed batches of offline operations to Mutasib using HMAC-SHA256 and idempotent client IDs, with 24-hour replay-attack protection built in."
 ---
 
 The sync API is designed for environments where connectivity is unreliable — a mobile POS in a low-signal area, a desktop app that works offline, or a kiosk that queues operations during network outages. You record operations locally as they happen, then submit them as a single signed batch when the connection is restored. Mutasib processes each operation in order, deduplicates anything it has already seen, and returns a per-operation result.

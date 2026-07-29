@@ -1,7 +1,7 @@
 ---
 title: "Shops: Your Core Business Entity in Mutasib"
 sidebarTitle: "Shops"
-description: "A shop is the root resource in Mutasib — every product, sale, staff member, and analytics report belongs to a shop. Understand the lifecycle, data model, and plan tiers."
+description: "A shop is the root resource in Mutasib. Every product, sale, and cashier belongs to a shop. Learn about the lifecycle, data model, and plan tiers."
 ---
 
 A shop is the central resource that ties everything together in Mutasib. Every product you list, every sale you record, every cashier you add, and every analytics report you generate belongs to a specific shop. Before you can do anything else with the API, you need a shop — and before that shop appears in public search results, it must be approved.
@@ -33,10 +33,12 @@ To temporarily take a shop offline without deleting it, use the activate and dea
 
 ```bash
 # Deactivate
-POST https://api.mutasib.com/api/v1/shops/{shop_id}/deactivate
+curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/deactivate \
+  -H "Authorization: Bearer <token>"
 
 # Reactivate
-POST https://api.mutasib.com/api/v1/shops/{shop_id}/activate
+curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/activate \
+  -H "Authorization: Bearer <token>"
 ```
 
 ## Shop Data Model
@@ -161,7 +163,7 @@ The following endpoints let you manage the full lifecycle of a shop. All request
   </Accordion>
 
   <Accordion title="DELETE /api/v1/shops/{shop_id} — Delete a shop">
-    Permanently deletes the shop and all associated data. This action cannot be undone.
+    Permanently deletes the shop and all associated data. This action cannot be undone. A successful deletion returns `204 No Content` with an empty response body.
 
     ```bash
     curl -X DELETE https://api.mutasib.com/api/v1/shops/{shop_id} \

@@ -1,7 +1,7 @@
 ---
 title: "Products, Categories, and Inventory in Mutasib"
 sidebarTitle: "Products"
-description: "Products are the items your shop sells. Learn about the data model, custom categories, barcode lookup, visibility controls, and OpenFood integration for global products."
+description: "Manage the items your shop sells. Learn about the product data model, custom categories, barcode lookup, visibility controls, and OpenFood integration."
 ---
 
 Products are the items your shop sells, and every product belongs to exactly one shop. Each product record tracks not just the name and price, but also cost, stock level, barcode, unit of measure, and visibility to customers. Whether you're running a small bakery or a large electronics store, the product model gives you the flexibility to represent your catalog accurately.
@@ -131,11 +131,11 @@ If the barcode matches a product in your shop, the full `ProductOut` object is r
 If a scanned barcode doesn't exist in your shop yet, you can look it up in the OpenFood global database to pre-fill product details before creating a new record.
 
 ```bash
-curl https://api.mutasib.com/api/v1/products/barcode/{barcode} \
+curl "https://api.mutasib.com/api/v1/products/barcode/{barcode}?country=world" \
   -H "Authorization: Bearer <token>"
 ```
 
-The response includes publicly available product metadata such as name, brand, and images sourced from OpenFood contributors worldwide. You can use this data to bootstrap a new product record rather than filling in every field manually.
+The `country` query parameter scopes the lookup; pass `world` to search the global OpenFood dataset. The response includes publicly available product metadata such as name, brand, and images sourced from OpenFood contributors worldwide. You can use this data to bootstrap a new product record rather than filling in every field manually.
 
 <Info>
   The OpenFood lookup is read-only — it never creates a product in your shop automatically. You still need to call `POST /api/v1/shops/{shop_id}/products/` with the returned data to add the item to your catalog.
@@ -156,6 +156,7 @@ Below is a full reference of the product-related endpoints available in the API.
 | `POST` | `/api/v1/shops/{shop_id}/products/batch-visibility` | Batch-update visibility for multiple products |
 | `GET` | `/api/v1/shops/{shop_id}/products/barcode/{barcode}/` | Find a product by barcode within your shop |
 | `GET` | `/api/v1/products/barcode/{barcode}` | Look up a barcode in the global OpenFood database |
+| `GET` | `/api/v1/shops/{shop_id}/products/public-summary` | Public summary of visible products for a shop |
 | `POST` | `/api/v1/shops/{shop_id}/categories/` | Create a custom category |
 | `GET` | `/api/v1/shops/{shop_id}/categories/` | List your shop's custom categories |
 | `GET` | `/api/v1/shops/preset-categories/` | Retrieve the global preset category tree |

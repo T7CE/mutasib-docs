@@ -1,7 +1,7 @@
 ---
-title: "AI API: Forecasts, Reorders, and M.AI Chat"
+title: "AI API: Demand Forecasts, Reorder Suggestions, and M.AI"
 sidebarTitle: "AI"
-description: "Use Mutasib's AI endpoints to predict demand, get reorder suggestions, and chat with M.AI in Arabic or English."
+description: "Predict product demand, get single and batch reorder suggestions, and chat with M.AI — Mutasib's action-capable shop assistant — in Arabic or English."
 ---
 
 Mutasib's AI endpoints let you forecast future demand for individual products, receive intelligent reorder quantity suggestions, and converse with **M.AI** — an AI agent that goes beyond answering questions to actually executing actions inside your shop, such as adjusting stock, checking recent sales, or searching your product catalog. All AI endpoints support both Arabic and English.
@@ -25,7 +25,7 @@ Predict future demand for a specific product based on its historical sales patte
 
 **`POST /api/v1/shops/{shop_id}/ai/predict`**
 
-<ParamField path="product_id" type="integer" required>
+<ParamField body="product_id" type="integer" required>
   The ID of the product you want to forecast demand for.
 </ParamField>
 
@@ -70,7 +70,7 @@ Get a suggested reorder quantity and urgency rating for one product based on cur
 
 **`POST /api/v1/shops/{shop_id}/ai/reorder`**
 
-<ParamField path="product_id" type="integer" required>
+<ParamField body="product_id" type="integer" required>
   The ID of the product to generate a reorder suggestion for.
 </ParamField>
 
@@ -135,6 +135,10 @@ Automatically apply the suggested reorder quantities as inventory adjustments fo
 
 **`POST /api/v1/shops/{shop_id}/ai/apply-recommendations`**
 
+<ParamField body="product_ids" type="array" required>
+  List of product IDs for which to apply the AI-suggested reorder quantities as inventory adjustments.
+</ParamField>
+
 ```bash
 curl -X POST https://api.mutasib.com/api/v1/shops/42/ai/apply-recommendations \
   -H "Authorization: Bearer <token>" \
@@ -152,10 +156,10 @@ M.AI is Mutasib's intelligent shop assistant. Unlike the general chat endpoint, 
 
 **`POST /api/v1/shops/{shop_id}/ai/mutasib`**
 
-<ParamField path="message" type="string" required>
+<ParamField body="message" type="string" required>
   Your message or question to M.AI.
 </ParamField>
-<ParamField path="conversation_history" type="array">
+<ParamField body="conversation_history" type="array">
   Previous turns in the conversation, enabling multi-turn dialogue. Each entry is an object with `role` (`user` or `assistant`) and `content` fields. Pass an empty array to start a new conversation.
 </ParamField>
 
@@ -207,13 +211,13 @@ The chat endpoint provides conversational AI assistance without tool execution �
 
 **`POST /api/v1/shops/{shop_id}/ai/chat`**
 
-<ParamField path="message" type="string" required>
+<ParamField body="message" type="string" required>
   Your message to the AI.
 </ParamField>
-<ParamField path="history" type="array">
+<ParamField body="history" type="array">
   Previous conversation turns for multi-turn context. Each entry has `role` and `content` fields.
 </ParamField>
-<ParamField path="language" type="string">
+<ParamField body="language" type="string">
   Response language. Defaults to `en`. Pass `ar` for Arabic responses.
 </ParamField>
 

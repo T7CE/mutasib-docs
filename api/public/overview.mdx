@@ -1,5 +1,5 @@
 ---
-title: "Public API: Shop Discovery and Product Search"
+title: "Public API: Product Search, Shop Discovery, and Receipts"
 sidebarTitle: "Public API"
 description: "Search products and shops publicly without authentication. Find nearby shops, browse listings, and access receipts via the Mutasib API."
 ---
@@ -68,7 +68,7 @@ Retrieve the public profile of a single shop by its ID, including name, location
 curl https://api.mutasib.com/api/v1/public/shops/42/
 ```
 
-Returns a single `ShopListOut` object with full shop detail.
+Returns a `ShopOut` object with the full public profile of the shop.
 
 ---
 

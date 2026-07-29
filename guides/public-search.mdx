@@ -1,5 +1,5 @@
 ---
-title: "Make Your Shop Discoverable with Public Search"
+title: "Make Your Mutasib Shop Discoverable with Public Search"
 sidebarTitle: "Public Search"
 description: "Enable your shop and products to appear in Mutasib's public marketplace, control product visibility, and let customers find you by location."
 ---
@@ -109,11 +109,17 @@ All query parameters are optional — omitting `q` returns all visible products 
 
 ### List all visible shops
 
+Filter shops by category using the optional `category` query parameter, or omit it to return every visible shop. The response is paginated.
+
 ```bash
+# All visible shops
 curl https://api.mutasib.com/api/v1/public/shops/
+
+# Shops in a specific category
+curl "https://api.mutasib.com/api/v1/public/shops/?category=grocery"
 ```
 
-Returns all approved, active shops that have opted in to public visibility. The response is paginated.
+Returns all approved, active shops that have opted in to public visibility.
 
 ### Get a single shop's details
 
@@ -123,8 +129,14 @@ curl https://api.mutasib.com/api/v1/public/shops/42/
 
 ### List a shop's public products
 
+Use `search` to match against product names and `category_id` to filter by category — both parameters are optional.
+
 ```bash
+# All public products
 curl https://api.mutasib.com/api/v1/public/shops/42/products/
+
+# With search and category filter
+curl "https://api.mutasib.com/api/v1/public/shops/42/products/?search=olive+oil&category_id=5"
 ```
 
 Returns only the products where `is_public: true`. Private products are never included in this response, regardless of the caller.

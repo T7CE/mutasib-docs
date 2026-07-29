@@ -1,7 +1,7 @@
 ---
-title: "Staff Invitations API: Add Cashiers to Your Shop"
+title: "Staff Invitations API — Invite and Manage Team Members"
 sidebarTitle: "Staff & Invitations"
-description: "Invite, list, and remove staff members, and manage pending invitations for your Mutasib shop using token-based invite links."
+description: "Invite staff with token-based links, accept or revoke invitations, search customers by email, and manage your shop team via the Mutasib API."
 ---
 
 Mutasib uses a token-based invitation flow to add staff to your shop. You create an invitation (optionally targeting a specific email address), share the resulting token or link with your staff member, and they accept it with their authenticated Mutasib account. Invitations expire after a configurable window and can be revoked at any time before they are used.
@@ -116,7 +116,7 @@ curl -X POST https://api.mutasib.com/api/v1/shops/invite/accept \
   -d '{ "token": "abc123xyz" }'
 ```
 
-Returns `200 OK` with a [StaffMemberOut](#staffmemberout-fields) object representing the newly created staff membership.
+Returns `201 Created` with a [StaffMemberOut](#staffmemberout-fields) object representing the newly created staff membership.
 
 <Note>
   If the invitation was created with a specific email, the authenticated user's email must match that address. Mismatched emails return a `403 Forbidden` error.
@@ -155,6 +155,29 @@ curl -X DELETE https://api.mutasib.com/api/v1/shops/42/staff/9 \
 ```
 
 Returns `204 No Content` on success.
+
+---
+
+## Search customers
+
+<br />
+
+`GET /api/v1/shops/customers/search/?q={query}`
+
+Searches Mutasib users by email address or username. Use this endpoint to find an existing user before sending them an invitation — you can pre-fill their email in the [Create an invitation](#create-an-invitation) request. Authentication is required.
+
+### Query parameters
+
+<ParamField query="q" type="string" required>
+  The search string to match against user email addresses and usernames. Partial matches are supported.
+</ParamField>
+
+```bash
+curl "https://api.mutasib.com/api/v1/shops/customers/search/?q=sarah" \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `200 OK` with an array of matching user objects. Returns an empty array if no users match the query.
 
 ---
 

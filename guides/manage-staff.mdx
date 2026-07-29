@@ -1,7 +1,7 @@
 ---
-title: "Manage Staff and Cashiers in Your Mutasib Shop"
+title: "Invite and Manage Staff Members in Your Mutasib Shop"
 sidebarTitle: "Staff Management"
-description: "Invite cashiers to your shop, manage active staff members, and revoke access — all through the Mutasib staff and invitations API."
+description: "Invite team members to your shop, manage active cashiers, and revoke access easily — all through the Mutasib staff and invitations API."
 ---
 
 Staff members in Mutasib are cashiers you authorize to process sales on behalf of your shop. Rather than sharing your owner credentials, you send each person a secure invitation token that they accept with their own account. This page walks you through the full lifecycle: creating invitations, accepting them, listing your team, and removing access when needed.
@@ -197,11 +197,3 @@ curl -X DELETE https://api.mutasib.com/api/v1/shops/42/invitations/inv_01HXZ3K..
 
 Revoking an invitation does not affect staff members who have already accepted it — use the [remove staff](#removing-a-staff-member) endpoint for that.
 
-## Viewing shops you belong to as a cashier
-
-If you are a cashier yourself (rather than a shop owner), you can retrieve the list of shops where you have an active staff role.
-
-```bash
-curl https://api.mutasib.com/api/v1/shops/staff \
-  -H "Authorization: Bearer <your_token>"
-```

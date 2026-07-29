@@ -1,7 +1,7 @@
 ---
-title: "Credit Notes API: Track Customer Balances"
+title: "Credit Notes API: Record and Manage Customer Debts"
 sidebarTitle: "Credit Notes"
-description: "Create and manage credit notes to track customer debts and balances per shop. Available on the Pro plan."
+description: "Create, update, and query credit notes to track what customers owe per shop, with due dates and pending, paid, or cancelled status."
 ---
 
 A credit note represents money a customer owes your shop — an informal debt recorded against a name. Instead of tracking these balances in a paper notebook or a separate spreadsheet, Mutasib lets you create, update, and query credit notes digitally, complete with due dates and status tracking.
@@ -57,8 +57,8 @@ curl -X POST https://api.mutasib.com/api/v1/credit-notes/42/ \
 <ResponseField name="customer_name" type="string">
   Name of the customer who owes the balance.
 </ResponseField>
-<ResponseField name="amount" type="number">
-  The outstanding amount.
+<ResponseField name="amount" type="string">
+  The outstanding amount, as a decimal string.
 </ResponseField>
 <ResponseField name="note" type="string">
   Free-text note attached to this credit note.
@@ -168,8 +168,8 @@ A note can only move from `pending` → `paid` or `pending` → `cancelled`. Onc
 <ResponseField name="customer_name" type="string">
   Name of the customer who owes the balance.
 </ResponseField>
-<ResponseField name="amount" type="number">
-  Amount owed.
+<ResponseField name="amount" type="string">
+  Amount owed, as a decimal string.
 </ResponseField>
 <ResponseField name="note" type="string">
   Descriptive note attached to the record.

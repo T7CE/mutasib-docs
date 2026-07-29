@@ -1,16 +1,16 @@
 ---
-title: "Manage Your Mutasib User Profile and Password"
+title: "Manage Your Mutasib Profile, Password, and Account Settings"
 sidebarTitle: "Profile"
-description: "GET/PATCH /api/v1/auth/me — fetch and update your profile. Change password, reset via email, or delete account."
+description: "Fetch and update your Mutasib user profile, change or reset your password, delete your account, and manage user roles as an admin."
 ---
 
-The `/me` endpoints give you full control over your own user record. You can read your current profile, update your display name or email address, change your password, trigger a password reset by email, and permanently delete your account. All endpoints in this section require a valid Bearer token unless otherwise noted.
+The profile endpoints give you full control over your own user record. You can read your current profile, update your display name or email address, change your password, trigger a password reset by email, and permanently delete your account. All endpoints in this section require a valid Bearer token unless otherwise noted.
 
 ---
 
 ## Get Your Profile
 
-Fetch the full profile for the currently authenticated user.
+Fetch the full profile for the currently authenticated user by calling the endpoint below with your access token.
 
 ```
 GET /api/v1/auth/me
@@ -73,7 +73,7 @@ curl --request GET \
 
 ## Update Your Profile
 
-Update your display name or email address. Only include the fields you want to change; omitted fields are left untouched.
+Update your display name or email address. Only include the fields you want to change; omitted fields are left untouched. The endpoint returns the full updated user object.
 
 ```
 PATCH /api/v1/auth/me
@@ -100,9 +100,18 @@ curl --request PATCH \
 
 **Response — 200 OK**
 
+The updated user object is returned immediately so you can reflect the changes in your application without a separate profile fetch.
+
 ```json
 {
-  "message": "Profile updated successfully."
+  "id": "usr_9f3a1b2c4d5e",
+  "email": "sara.boutique@example.com",
+  "username": "sara_boutique",
+  "role": "shopowner",
+  "is_active": true,
+  "is_email_verified": true,
+  "created_at": "2024-03-15T09:22:41Z",
+  "updated_at": "2024-11-02T15:30:00Z"
 }
 ```
 
@@ -182,7 +191,7 @@ If you cannot log in because you have forgotten your password, use this two-step
   </Step>
 
   <Step title="Submit the New Password">
-    Extract the `uid` and `token` values from the reset link in the email, then call the reset endpoint:
+    Extract the `uid` and `token` values from the reset link in the email, then call the reset endpoint.
 
     ```
     POST /api/v1/auth/reset-password
@@ -225,7 +234,7 @@ If you cannot log in because you have forgotten your password, use this two-step
 
 ## Delete Account
 
-Permanently remove your Mutasib account. This operation performs a soft-delete: your personal information (name, email, and other PII) is anonymized, your account is deactivated, and you can no longer log in. However, an anonymized audit record is retained to preserve transaction and compliance history.
+Permanently remove your Mutasib account. This operation performs a soft-delete: your personal information (name, email, and other PII) is anonymized, your account is deactivated, and you can no longer log in. An anonymized audit record is retained to preserve transaction and compliance history.
 
 ```
 POST /api/v1/auth/delete-account
@@ -261,10 +270,10 @@ curl --request POST \
 
 ## Set a User's Role (Admin Only)
 
-An administrator can change the role of any user account. Pass the target user's ID as a path parameter and the desired role as a query string.
+An administrator can change the role of any user account. Pass the target user's ID as a path parameter and the desired role as a query parameter.
 
 ```
-PUT /api/v1/auth/users/{user_id}/role?role=<role>
+PUT /api/v1/auth/users/{user_id}/role?role=ROLE
 ```
 
 <ParamField path="user_id" type="string" required>

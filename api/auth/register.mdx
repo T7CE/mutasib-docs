@@ -1,7 +1,7 @@
 ---
-title: "Register a New Mutasib Account"
+title: "Create a New Mutasib Account with the Register API"
 sidebarTitle: "Register"
-description: "POST /api/v1/auth/register — create a new user account. Accepts email, username, password, and role."
+description: "Register a new Mutasib user, verify your email address, and resend the verification link if it expires — all through the registration API."
 ---
 
 Registration creates a new user account in Mutasib. Once you submit your details, the API provisions your account and immediately dispatches a verification email to the address you provided. You must complete email verification before you can log in for the first time.
@@ -23,7 +23,7 @@ POST /api/v1/auth/register
 </ParamField>
 
 <ParamField body="password" type="string" required>
-  The account password. Use a strong password of at least eight characters. Mutasib stores passwords using a secure one-way hash — they are never stored in plain text.
+  The account password. Use a strong password of at least eight characters.
 </ParamField>
 
 <ParamField body="role" type="string">
@@ -67,21 +67,68 @@ A successful registration returns a plain success object confirming that the acc
 }
 ```
 
+---
+
 ## Email Verification
 
-After registration, Mutasib sends a verification link to the email address you provided. The link embeds a short-lived token. To activate your account, make the following request with that token:
+After registration, Mutasib sends a verification link to the email address you provided. The link embeds a short-lived token. To activate your account and receive your access and refresh tokens, make the following request with that token.
 
 ```
-POST /api/v1/auth/verify-email?token=<verification_token>
+POST /api/v1/auth/verify-email?token=TOKEN
 ```
 
 ```bash
 curl --request POST \
-  --url 'https://api.mutasib.com/api/v1/auth/verify-email?token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...'
+  --url 'https://api.mutasib.com/api/v1/auth/verify-email?token=<verification_token>'
 ```
 
-A `200 OK` response confirms that your email is verified and your account is ready to use.
+### Response — 200 OK
+
+A successful verification returns a `TokenOut` object. Store the `access` token for use in the `Authorization: Bearer` header and the `refresh` token to obtain new access tokens when the current one expires.
+
+```json
+{
+  "access": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+<ResponseField name="access" type="string">
+  A short-lived token. Pass this value in the `Authorization: Bearer` header for all authenticated requests.
+</ResponseField>
+
+<ResponseField name="refresh" type="string">
+  A longer-lived token. Use it to obtain a fresh access token via the token refresh endpoint without requiring the user to log in again.
+</ResponseField>
+
+<ResponseField name="token_type" type="string">
+  Always `"bearer"`. Indicates the token scheme to use in the `Authorization` header.
+</ResponseField>
+
+---
+
+## Resend Verification Email
+
+If the verification email did not arrive or the link has expired, you can request a new one using the resend endpoint.
+
+```
+POST /api/v1/auth/resend-verification?email=EMAIL
+```
+
+```bash
+curl --request POST \
+  --url 'https://api.mutasib.com/api/v1/auth/resend-verification?email=sara%40example.com'
+```
+
+### Response — 200 OK
+
+```json
+{
+  "message": "Verification email resent. Please check your inbox."
+}
+```
 
 <Note>
-  You cannot log in until your email address is verified. If the verification email does not arrive within a few minutes, check your spam folder. Token links expire after 24 hours — if yours expires, re-register or contact support to request a new verification email.
+  You cannot log in until your email address is verified. If the verification email does not arrive within a few minutes, check your spam folder. Use the resend endpoint above to get a fresh link — do not re-register with the same address.
 </Note>

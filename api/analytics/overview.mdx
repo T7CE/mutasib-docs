@@ -1,7 +1,7 @@
 ---
-title: "Analytics API: Revenue Trends and Shop Insights"
+title: "Analytics API: Revenue Trends, Insights, and Suppliers"
 sidebarTitle: "Analytics"
-description: "Retrieve revenue trends, top products, category breakdowns, and period comparisons for your shop analytics via the Mutasib API."
+description: "Retrieve revenue trends, top products, category breakdowns, and period comparisons for your shop. Manage suppliers via the Mutasib Analytics API."
 ---
 
 The analytics endpoints give you a complete picture of your shop's financial performance — revenue trends over time, gross vs. net profit, your best-selling products, and how different product categories contribute to total revenue. You can also compare any period to the one that preceded it to spot growth or decline at a glance.
@@ -33,20 +33,20 @@ curl "https://api.mutasib.com/api/v1/shops/42/analytics?days=30" \
 <ResponseField name="period_days" type="integer">
   The number of days this report covers, as requested.
 </ResponseField>
-<ResponseField name="total_revenue" type="number">
-  Gross revenue (sum of all sale totals) for the period.
+<ResponseField name="total_revenue" type="string">
+  Gross revenue (sum of all sale totals) for the period, returned as a decimal string.
 </ResponseField>
-<ResponseField name="total_cost" type="number">
-  Total cost of goods sold for the period, if cost prices are configured.
+<ResponseField name="total_cost" type="string">
+  Total cost of goods sold for the period, returned as a decimal string. Present only if cost prices are configured.
 </ResponseField>
-<ResponseField name="net_revenue" type="number">
-  `total_revenue − total_cost`. Represents gross profit for the period.
+<ResponseField name="net_revenue" type="string">
+  `total_revenue − total_cost`, returned as a decimal string. Represents gross profit for the period.
 </ResponseField>
 <ResponseField name="total_sales_count" type="integer">
   Total number of individual transactions recorded in the period.
 </ResponseField>
-<ResponseField name="avg_order_value" type="number">
-  Average value per transaction: `total_revenue / total_sales_count`.
+<ResponseField name="avg_order_value" type="string">
+  Average value per transaction (`total_revenue / total_sales_count`), returned as a decimal string.
 </ResponseField>
 <ResponseField name="revenue_trend" type="array">
   Day-by-day revenue breakdown for the period.
@@ -109,11 +109,11 @@ curl "https://api.mutasib.com/api/v1/shops/42/analytics?days=30" \
 {
   "shop_name": "Al-Nour Supermarket",
   "period_days": 30,
-  "total_revenue": 14823.50,
-  "total_cost": 9102.00,
-  "net_revenue": 5721.50,
+  "total_revenue": "14823.50",
+  "total_cost": "9102.00",
+  "net_revenue": "5721.50",
   "total_sales_count": 1204,
-  "avg_order_value": 12.31,
+  "avg_order_value": "12.31",
   "revenue_trend": [
     { "date": "2024-01-01", "revenue": 480.00 },
     { "date": "2024-01-02", "revenue": 512.75 },
@@ -159,22 +159,22 @@ Returns an array of `SupplierOut` objects.
 
 **`POST /api/v1/shops/{shop_id}/suppliers`**
 
-<ParamField path="name" type="string" required>
+<ParamField body="name" type="string" required>
   Supplier's business or trading name.
 </ParamField>
-<ParamField path="contact_name" type="string">
+<ParamField body="contact_name" type="string">
   Name of the primary contact person at the supplier.
 </ParamField>
-<ParamField path="phone" type="string">
+<ParamField body="phone" type="string">
   Supplier contact phone number.
 </ParamField>
-<ParamField path="email" type="string">
+<ParamField body="email" type="string">
   Supplier contact email address.
 </ParamField>
-<ParamField path="address" type="string">
+<ParamField body="address" type="string">
   Physical or mailing address for the supplier.
 </ParamField>
-<ParamField path="notes" type="string">
+<ParamField body="notes" type="string">
   Free-text notes about this supplier (e.g. payment terms, delivery schedule).
 </ParamField>
 

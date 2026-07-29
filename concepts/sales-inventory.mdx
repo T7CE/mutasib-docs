@@ -1,7 +1,7 @@
 ---
 title: "Sales, Receipts, and Inventory Management"
 sidebarTitle: "Sales & Inventory"
-description: "Record sales, auto-decrement stock, generate shareable digital receipts, track inventory movements, adjust stock manually, and manage customer credit notes — all in one place."
+description: "Record sales, generate shareable receipts, track inventory movements, adjust stock manually, and manage customer credit notes with Mutasib's API."
 ---
 
 Every sale in Mutasib is a complete, auditable record: it captures which products were sold, who processed the transaction, at what unit price, and at what time. The moment a sale is created, Mutasib automatically decrements the stock of each product included in the transaction. You never have to update inventory manually after a sale.
@@ -49,13 +49,11 @@ curl -X POST https://api.mutasib.com/api/v1/shops/{shop_id}/sales/ \
     "items": [
       {
         "product_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        "quantity": 2,
-        "unit_price": 150.00
+        "quantity": 2
       },
       {
         "product_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-        "quantity": 1,
-        "unit_price": 85.50
+        "quantity": 1
       }
     ]
   }'
@@ -181,35 +179,6 @@ curl -X POST https://api.mutasib.com/api/v1/credit-notes/{shop_id}/ \
 
 The `due_date` field is optional. Omit it for open-ended credit with no fixed repayment date.
 
-### Listing Credit Notes
-
-Retrieve all credit notes for your shop. You can filter by status to see only open, paid, or overdue notes:
-
-```bash
-curl "https://api.mutasib.com/api/v1/credit-notes/{shop_id}/?status=open" \
-  -H "Authorization: Bearer <token>"
-```
-
-### Updating a Credit Note
-
-Mark a note as paid or update its details:
-
-```bash
-curl -X PATCH https://api.mutasib.com/api/v1/credit-notes/{shop_id}/{note_id}/ \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{ "status": "paid" }'
-```
-
-### Customer View
-
-Customers can retrieve their own credit notes across all shops without needing shop-owner credentials:
-
-```bash
-curl https://api.mutasib.com/api/v1/credit-notes/my/ \
-  -H "Authorization: Bearer <customer-token>"
-```
-
 ## Endpoint Summary
 
 | Method | Endpoint | Description |
@@ -224,6 +193,3 @@ curl https://api.mutasib.com/api/v1/credit-notes/my/ \
 | `GET` | `/api/v1/shops/{shop_id}/inventory/low-stock/` | Products below threshold |
 | `GET` | `/api/v1/shops/{shop_id}/inventory/movements/` | Full stock movement log |
 | `POST` | `/api/v1/credit-notes/{shop_id}/` | Create a credit note |
-| `GET` | `/api/v1/credit-notes/{shop_id}/` | List credit notes for a shop |
-| `PATCH` | `/api/v1/credit-notes/{shop_id}/{note_id}/` | Update a credit note |
-| `GET` | `/api/v1/credit-notes/my/` | Customer's own credit notes |

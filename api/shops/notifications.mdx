@@ -1,7 +1,7 @@
 ---
-title: "Shop Notification Settings API"
-sidebarTitle: "Notifications Settings"
-description: "Get and update per-shop notification settings, including email reports and low-stock alert frequency, via the Mutasib REST API."
+title: "Shop Notification Settings API: Alerts and Reports"
+sidebarTitle: "Notifications"
+description: "Retrieve and update per-shop notification preferences — enable email performance reports and configure low-stock alert frequency in Mutasib."
 ---
 
 Each shop in Mutasib has its own notification settings that control how and when you receive automated alerts. You can enable scheduled email reports to track performance, and configure low-stock alerts so you are notified before inventory runs dry. Settings are stored per shop and can be updated at any time.
@@ -87,7 +87,7 @@ The `alert_frequency` field controls how often Mutasib checks and sends low-stoc
 | `"24h"` | Alert digest sent once per day (default). Best for slower-moving inventory. |
 
 <Note>
-  Email reports (`email_reports: true`) are a **Pro plan feature**. Enabling this setting on a Free or Starter plan shop will return a `403 Forbidden` response. Upgrade your plan first via the [Plans API](/api/shops/plans) before enabling email reports.
+  Some notification features may require an active paid plan. If enabling a setting returns a `403 Forbidden` response, check your shop's current plan via the [Plans API](/api/shops/plans) and upgrade if necessary.
 </Note>
 
 <Tip>

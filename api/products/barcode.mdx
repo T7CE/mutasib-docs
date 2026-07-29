@@ -1,5 +1,5 @@
 ---
-title: "Barcode Lookup: Shop and OpenFood Database"
+title: "Barcode Lookup: Shop Inventory and OpenFood Database"
 sidebarTitle: "Barcode Lookup"
 description: "Look up products by barcode in your shop inventory or the global OpenFood Facts database. Supports country filtering and one-click import into your shop."
 ---
@@ -44,7 +44,8 @@ Looks up a barcode in the OpenFood Facts global product database. This is useful
 </ParamField>
 
 ```bash
-curl "https://api.mutasib.com/api/v1/products/barcode/6281234567890?country=world"
+curl "https://api.mutasib.com/api/v1/products/barcode/6281234567890?country=world" \
+  -H "Authorization: Bearer <your_token>"
 ```
 
 Returns `200 OK` with the product data from OpenFood Facts, including name, brand, image URL, and nutritional information where available. Returns `404 Not Found` if the barcode is not in the OpenFood database.
@@ -82,7 +83,8 @@ Searches the OpenFood Facts database by product name or keyword. Use this to bro
 </ParamField>
 
 ```bash
-curl "https://api.mutasib.com/api/v1/products/search?q=milk&page=1&page_size=10&country=sa"
+curl "https://api.mutasib.com/api/v1/products/search?q=milk&page=1&page_size=10&country=sa" \
+  -H "Authorization: Bearer <your_token>"
 ```
 
 Returns `200 OK` with a paginated list of OpenFood product objects matching the search query.
@@ -113,8 +115,13 @@ Browses the OpenFood Facts database by a category slug (e.g., `dairy`, `beverage
   Number of results per page.
 </ParamField>
 
+<ParamField query="country" type="string" default='"world"'>
+  Filter results by country locale (e.g., `"sa"` for Saudi Arabia, `"eg"` for Egypt). Defaults to `"world"` for global results.
+</ParamField>
+
 ```bash
-curl "https://api.mutasib.com/api/v1/products/browse/dairy?page=1&page_size=12"
+curl "https://api.mutasib.com/api/v1/products/browse/dairy?page=1&page_size=12&country=world" \
+  -H "Authorization: Bearer <your_token>"
 ```
 
 Returns `200 OK` with a paginated list of OpenFood product objects in the specified category.

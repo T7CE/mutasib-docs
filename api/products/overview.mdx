@@ -1,5 +1,5 @@
 ---
-title: "Products API: Create and Manage Shop Products"
+title: "Products API: Create, List, and Manage Shop Products"
 sidebarTitle: "Products"
 description: "Create, list, update, search, and deactivate products in your Mutasib shop. Includes image upload, batch operations, and public visibility toggling."
 ---
@@ -276,7 +276,7 @@ curl -X POST https://api.mutasib.com/api/v1/shops/42/products/301/images/ \
   -F "sort_order=0"
 ```
 
-Returns `201 Created` with the uploaded image object containing `id`, `url`, `alt_text`, and `sort_order`.
+Returns `201 Created` with the uploaded image object containing `id`, `image`, `alt_text`, and `sort_order`.
 
 ---
 
@@ -378,6 +378,31 @@ Returns `200 OK` with a summary of how many products were updated.
 
 ---
 
+## Public product summary
+
+<br />
+
+`GET /api/v1/shops/{shop_id}/products/public-summary`
+
+Returns a summary of the shop's public product count relative to the plan's publication limit. Use this to check how many products are currently set as public and whether the shop has headroom left to make more products visible on the storefront.
+
+```bash
+curl https://api.mutasib.com/api/v1/shops/42/products/public-summary \
+  -H "Authorization: Bearer <your_token>"
+```
+
+Returns `200 OK` with an object containing the fields below.
+
+<ResponseField name="public_count" type="integer">
+  The number of products currently marked as public in this shop.
+</ResponseField>
+
+<ResponseField name="plan_limit" type="integer">
+  The maximum number of public products allowed under the shop's current plan.
+</ResponseField>
+
+---
+
 ## ProductOut response fields
 
 <ResponseField name="id" type="integer">
@@ -408,12 +433,12 @@ Returns `200 OK` with a summary of how many products were updated.
   The product's barcode string.
 </ResponseField>
 
-<ResponseField name="price" type="number">
-  Current selling price.
+<ResponseField name="price" type="string">
+  Current selling price, returned as a decimal string (e.g., `"34.99"`).
 </ResponseField>
 
-<ResponseField name="cost" type="number">
-  Purchase or production cost used for margin calculations.
+<ResponseField name="cost" type="string">
+  Purchase or production cost, returned as a decimal string (e.g., `"18.50"`).
 </ResponseField>
 
 <ResponseField name="stock" type="integer">
@@ -442,7 +467,7 @@ Returns `200 OK` with a summary of how many products were updated.
     <ResponseField name="id" type="integer">
       Unique image ID.
     </ResponseField>
-    <ResponseField name="url" type="string">
+    <ResponseField name="image" type="string">
       Public URL of the uploaded image.
     </ResponseField>
     <ResponseField name="alt_text" type="string">

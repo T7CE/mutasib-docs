@@ -1,7 +1,7 @@
 ---
-title: "Shop Management API Endpoints"
+title: "Mutasib Shops API: Create and Manage Shop Listings"
 sidebarTitle: "Shops"
-description: "Create, list, update, activate/deactivate, and manage all your shops through the Mutasib REST API using JWT Bearer authentication."
+description: "Create, list, update, activate, and delete shops through the Mutasib REST API. All shop endpoints require a valid JWT Bearer token."
 ---
 
 The Shops API is the foundation of Mutasib. Every product, staff member, and transaction belongs to a shop, so you'll typically create or retrieve a shop before working with any other resource. All endpoints require a valid JWT Bearer token in the `Authorization` header unless stated otherwise.
@@ -289,6 +289,10 @@ Every shop endpoint returns a ShopOut object with the following fields.
 
 <ResponseField name="is_approved" type="boolean">
   Whether the shop has been approved by Mutasib. Newly created shops start as unapproved.
+</ResponseField>
+
+<ResponseField name="approved_by_id" type="integer | null">
+  The user ID of the Mutasib administrator who approved the shop, or `null` if the shop has not yet been approved.
 </ResponseField>
 
 <ResponseField name="created_at" type="string">

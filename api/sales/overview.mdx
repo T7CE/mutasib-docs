@@ -1,7 +1,7 @@
 ---
-title: "Sales API: Record and Retrieve Shop Transactions"
+title: "Sales API: Record, List, and Retrieve Shop Transactions"
 sidebarTitle: "Sales"
-description: "Create sales, list transactions, get today's stats, and retrieve individual sales via the Mutasib API."
+description: "Create sales, filter by date range, pull today's revenue, and fetch individual sale details with receipt tokens via the Mutasib API."
 ---
 
 Every sale you record through Mutasib captures which products were sold, at what price, and by which cashier — and automatically decrements stock for each item in the transaction. Sales are immutable once created; if a correction is needed, contact support rather than attempting to delete or overwrite a record.
@@ -72,16 +72,16 @@ curl -X POST https://api.mutasib.com/api/v1/shops/42/sales/ \
     <ResponseField name="quantity" type="integer">
       Number of units sold.
     </ResponseField>
-    <ResponseField name="unit_price" type="number">
-      Price per unit at the time of the sale.
+    <ResponseField name="unit_price" type="string">
+      Price per unit at the time of the sale, as a decimal string.
     </ResponseField>
-    <ResponseField name="total" type="number">
-      `unit_price × quantity` for this line item.
+    <ResponseField name="total" type="string">
+      `unit_price × quantity` for this line item, as a decimal string.
     </ResponseField>
   </Expandable>
 </ResponseField>
-<ResponseField name="total_amount" type="number">
-  Sum of all line-item totals for the sale.
+<ResponseField name="total_amount" type="string">
+  Sum of all line-item totals for the sale, as a decimal string.
 </ResponseField>
 <ResponseField name="receipt_token" type="string">
   Unique token used to access the public digital receipt. See [Digital Receipts](#digital-receipts).

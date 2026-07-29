@@ -1,7 +1,7 @@
 ---
-title: "Mutasib API: Shop Management for Developers"
+title: "Mutasib REST API: Build on a Full Shop Management Platform"
 sidebarTitle: "Introduction"
-description: "Mutasib's REST API lets you build on top of a full-featured shop management platform — POS, inventory, analytics, AI insights, and multi-cashier support."
+description: "Mutasib's REST API gives you programmatic access to POS, inventory, sales analytics, AI insights, and multi-cashier support for any retail shop."
 ---
 
 Mutasib is an all-in-one shop management platform built for retailers, boutique owners, and their teams. Whether you run a single register or a multi-cashier storefront, Mutasib handles point-of-sale, inventory tracking, sales analytics, and AI-powered insights under one roof. The Mutasib REST API exposes every core capability so you can integrate Mutasib into your own apps, automate workflows, build custom dashboards, or extend the platform to fit your business logic.
@@ -38,7 +38,7 @@ All API requests are made over HTTPS. The current version of the API is `v1`.
 
   Prefix every endpoint with `/api/v1/`. For example, to log in:
 
-  ```
+  ```text
   POST https://api.mutasib.com/api/v1/auth/login
   ```
 </Info>
@@ -47,7 +47,7 @@ All API requests are made over HTTPS. The current version of the API is `v1`.
 
 The Mutasib API uses **JWT Bearer tokens** for authentication. Every request to a protected endpoint must include an `Authorization` header:
 
-```
+```text
 Authorization: Bearer <your_access_token>
 ```
 
